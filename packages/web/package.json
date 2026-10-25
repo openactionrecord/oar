@@ -1,0 +1,15 @@
+{
+  "name": "@openactionrecord/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The OAR playground: a static page that verifies bundles in the browser.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsx src/build.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openactionrecord/core": "workspace:^"
+  }
+}

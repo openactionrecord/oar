@@ -1,0 +1,21 @@
+name: Integration request
+description: Ask for (or offer) OAR support in a framework, gateway or system of record
+labels: [integration]
+body:
+  - type: input
+    id: tool
+    attributes:
+      label: Which tool?
+      placeholder: "LangChain, MCP Python SDK, Stripe, Postgres..."
+    validations:
+      required: true
+  - type: textarea
+    id: use
+    attributes:
+      label: What would you record, and what should be confirmed?
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help?
+      options:
+        - label: I'd like to contribute it

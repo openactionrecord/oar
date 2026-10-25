@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2023"
+    ],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "sourceMap": true,
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@openactionrecord/core": [
+        "./packages/core/src/index.ts"
+      ],
+      "@openactionrecord/core/standalone": [
+        "./packages/core/src/standalone.ts"
+      ],
+      "@openactionrecord/core/testing": [
+        "./packages/core/src/testing/index.ts"
+      ]
+    }
+  }
+}
