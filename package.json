@@ -7,7 +7,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "test": "vitest run",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r typecheck && tsc --noEmit",
     "vectors": "tsx scripts/vectors.ts",
     "demo": "tsx packages/cli/src/main.ts demo"
   },
