@@ -1,0 +1,125 @@
+{
+  "format": "oar-bundle/0.1",
+  "generated_at": "2026-10-25T14:00:04.000Z",
+  "org": {
+    "id": "example-store",
+    "name": "Example Store (test vectors)"
+  },
+  "scope": {
+    "from": "2026-10-25T14:00:01.000Z",
+    "to": "2026-10-25T14:00:03.000Z",
+    "complete": true
+  },
+  "records": [
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:00ffb3aa-f7b6-464f-87b0-09c6bfa60d8c",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "store_credit",
+          "target": "store"
+        },
+        "instance_commitment": "sha256:ce771c35a95fe327a3dc762d2636e7f018722e34b7e46a2e39cbc10159cb17fa",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "approval": {
+          "method": "standing_mandate",
+          "at": "2026-10-25T14:00:01.000Z"
+        },
+        "result": "allowed",
+        "reasons": [
+          "within_limits"
+        ],
+        "enforced": true,
+        "issued_at": "2026-10-25T14:00:01.000Z"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "79e3e2156c7f5a29a9c9b56464d37c8248ad3229c9a05f9a1cd0a8f74e852b871abefff32e782ebf789ffe3be442eaf648cbfc59a2dd071c3b8573db6e6c5109"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:41bba052-57b6-48dc-8fe6-ec35d27d40bf",
+        "phase": "execution",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "store_credit",
+          "target": "store"
+        },
+        "instance_commitment": "sha256:ce771c35a95fe327a3dc762d2636e7f018722e34b7e46a2e39cbc10159cb17fa",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "result": "executed",
+        "reasons": [
+          "executed"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:00ffb3aa-f7b6-464f-87b0-09c6bfa60d8c",
+        "target_ref_commitment": "sha256:9d48feb7e23d1a0944cc851bb6e1edbbe1ecc1f920602b7908166c608b44ddec",
+        "issued_at": "2026-10-25T14:00:02.000Z",
+        "prev_receipt_hash": "sha256:82c860a5881d3c77c54dbea57dcf4afe5814228dea279fd5e69649dd48c6b5d3"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "9b2a1eb40b5c6d3937162030739d316e9e1ed61347fd58e7e7ce45c8eba32c02f278ece8da819badae8a4a988667b9f713c0ccefe0bc22d05484cf3ebe0dd503"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:cb04349c-379b-40db-889a-f28b669f0344",
+        "phase": "confirmation",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "store_credit",
+          "target": "store"
+        },
+        "instance_commitment": "sha256:ce771c35a95fe327a3dc762d2636e7f018722e34b7e46a2e39cbc10159cb17fa",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "result": "confirmed",
+        "reasons": [
+          "outcome_confirmed"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:41bba052-57b6-48dc-8fe6-ec35d27d40bf",
+        "target_ref_commitment": "sha256:82c93cfe57a1abf8dccb07ad5adcddc2303e8e90a5a76ab4ad9860ec258ed0df",
+        "issued_at": "2026-10-25T14:00:03.000Z",
+        "prev_receipt_hash": "sha256:a2c554fb5f2c6326f77dc9455b96fd2b99734981ca8d51102e99d482130cde7c"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "efda28b23410c46aaceca3a0bca52b9eac7b03a3dae27b1ce3af04d139353a8e55c7181c1d7b6d69b925c19c24257faf79accf14594058c533202f762f97360b"
+      }
+    }
+  ],
+  "disclosures": [],
+  "checkpoints": [],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+          "kid": "oar-test-issuer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  }
+}

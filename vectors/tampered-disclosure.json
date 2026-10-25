@@ -1,0 +1,279 @@
+{
+  "format": "oar-bundle/0.1",
+  "generated_at": "2026-10-25T14:00:13.000Z",
+  "org": {
+    "id": "example-store",
+    "name": "Example Store (test vectors)"
+  },
+  "purpose": "dispute",
+  "scope": {
+    "from": "2026-10-25T14:00:01.000Z",
+    "to": "2026-10-25T14:00:10.000Z",
+    "complete": true
+  },
+  "records": [
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:be117858-6d1e-4c13-84fb-4b70b22e9b26",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "refund",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:988cd2b4f31c5a5c67955919fe2875ada94e076126388ac32364e232f2e8512c",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "result": "held",
+        "reasons": [
+          "over_approval_limit"
+        ],
+        "enforced": true,
+        "issued_at": "2026-10-25T14:00:01.000Z"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "7bb3a6984821c65a10f4ba0f3fd4cb92f92cf43021a80f54beac3e1e7f7112e6fd53506b651f9c06068f43933ced5b3111aa2cf5d9bb5e186580e5739e35100a"
+      },
+      "seal": {
+        "sealer_kid": "oar-test-sealer",
+        "seq": 1,
+        "sealed_at": "2026-10-25T14:00:02.000Z",
+        "sig": "bf6461979ebe71b267161433e030e002e7583ee108e23706d6da0c19436c6417a1ce170b9d07b04b1e9f1a443192784e687474c82f7fe3c5e7fa5b8ced156502"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:b1ee345e-5826-45d7-8f50-66138e17d318",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "refund",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:988cd2b4f31c5a5c67955919fe2875ada94e076126388ac32364e232f2e8512c",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "approver:jordan",
+        "approval": {
+          "method": "passkey",
+          "approver": "jordan",
+          "at": "2026-10-25T14:00:04.000Z",
+          "assertion_digest": "sha256:3babc363c5824819360e71c8b38603b77c230b89533a5b4bdf44563c69e1fcb6"
+        },
+        "result": "approved",
+        "reasons": [
+          "approved_by_person"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:be117858-6d1e-4c13-84fb-4b70b22e9b26",
+        "issued_at": "2026-10-25T14:00:04.000Z",
+        "prev_receipt_hash": "sha256:eed8639548cff6a79b8bf4fe98cedda6c7d8baa583bb59c5edcf6a50cf38ce16"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "e45bc3082a07434ced4938c4ae7c00cbc700a2f907fde97174090dcdcfe08646db010f2d0c5ef1e4292b9f26bfec3c2cda8572b230f40d7fc6e849685a5bb20c"
+      },
+      "seal": {
+        "sealer_kid": "oar-test-sealer",
+        "seq": 2,
+        "sealed_at": "2026-10-25T14:00:05.000Z",
+        "sig": "043d4964fe78a1b43573985c164d9ba024d328a3c5638cb5666ed29ce56da7e65057a339f2fa9effe8fa28f8e00fb4f47b3097b06cf2edd622c1201f49df5d06"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:767a6834-c8dd-409f-8d93-f29865f131e0",
+        "phase": "execution",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "refund",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:988cd2b4f31c5a5c67955919fe2875ada94e076126388ac32364e232f2e8512c",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "approver:jordan",
+        "result": "executed",
+        "reasons": [
+          "executed"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:b1ee345e-5826-45d7-8f50-66138e17d318",
+        "target_ref_commitment": "sha256:19e0c462835de91b0d6e67dc5d04feb9b7c505cdd8cd35fced3481a6f5af4fb3",
+        "state_before_commitment": "sha256:48c810f38198d1c2a2a13124fc8f1d235d446d490ef5ec6f839e493296308cc6",
+        "state_after_commitment": "sha256:bccc95c7d7d2ac08c830779e109da26e535d82a419cac0f15bd75695936e7e33",
+        "issued_at": "2026-10-25T14:00:07.000Z",
+        "prev_receipt_hash": "sha256:3e1235333d4c97a2ae5fdaf0a739149c3c7742e98e9b284136a3f6b4bb26e540"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "1557e1c87dbaf8d498f3456853774c74574abb7fd3f3657fef92facd179d118d423f71b42be0dc1d52a585b39a19afa8bc7464d4912909c616827954af1b6c08"
+      },
+      "seal": {
+        "sealer_kid": "oar-test-sealer",
+        "seq": 3,
+        "sealed_at": "2026-10-25T14:00:08.000Z",
+        "sig": "4560d6b8e2a05ec1cbaef9e5345d13e2de4bd17fdc56152da099bbeb1b47cff87610be866e1660b54ba4330da8459cdd94f2dc9131dc85dd21c6a36dc0503c0a"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:4e976628-27ca-4962-82ae-533d4c2c9ca7",
+        "phase": "confirmation",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "refund",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:988cd2b4f31c5a5c67955919fe2875ada94e076126388ac32364e232f2e8512c",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "approver:jordan",
+        "result": "confirmed",
+        "reasons": [
+          "outcome_confirmed"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:767a6834-c8dd-409f-8d93-f29865f131e0",
+        "target_ref_commitment": "sha256:3f928f01c9ab9b57059f557c048b2ecfd35e1080e8a8f235275576ef93b3287b",
+        "issued_at": "2026-10-25T14:00:10.000Z",
+        "prev_receipt_hash": "sha256:6b85c255eab7a30604dc25d8e146452db8c8e1f53b907e2c4874bdca09831e61"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "3cbe7071a40d31deafb46aa367ae01667e3cf1f5a1d34f63d258eaf6aeb6ac2f8018e831bd58ffa1e4e58c175fad37d3dd832541f1a2a9bf11be1d02c84bf303"
+      },
+      "seal": {
+        "sealer_kid": "oar-test-sealer",
+        "seq": 4,
+        "sealed_at": "2026-10-25T14:00:11.000Z",
+        "sig": "51a3b90d320747d7292fe76bc57dd15d65056a6a2d084650c2413a6ce1c8c8a50d059bc01a506e957c4feed975087f4b5154e249699a0601e9a6b78b37f55d0c"
+      }
+    }
+  ],
+  "disclosures": [
+    {
+      "receiptId": "urn:uuid:be117858-6d1e-4c13-84fb-4b70b22e9b26",
+      "field": "instance",
+      "salt": "a191b7d3afb8937b40fd79ddddf461584dec84bb6dff322863f788d46cc9cc29",
+      "value": {
+        "type": "refund",
+        "params": {
+          "order": "1142",
+          "amountCents": 190000
+        },
+        "idempotency_key": "refund-1142-1"
+      }
+    },
+    {
+      "receiptId": "urn:uuid:767a6834-c8dd-409f-8d93-f29865f131e0",
+      "field": "state_before",
+      "salt": "60d54ef0069955d44a4690b9a2dcd3994cf503ed1f7338498fdfe7997f1c0efd",
+      "value": {
+        "order": "1142",
+        "totalCents": 190000,
+        "refundedCents": 0
+      }
+    },
+    {
+      "receiptId": "urn:uuid:767a6834-c8dd-409f-8d93-f29865f131e0",
+      "field": "state_after",
+      "salt": "4d6286db693c74b1cce6a76296dab799adf3233d79c94f36ebc2213fe2c255ec",
+      "value": {
+        "order": "1142",
+        "totalCents": 190000,
+        "refundedCents": 19000
+      }
+    },
+    {
+      "receiptId": "urn:uuid:767a6834-c8dd-409f-8d93-f29865f131e0",
+      "field": "target_ref",
+      "salt": "9cc7562f5a8446b1885942612343d6ea77e26560ec8f570946d6dc18befe0241",
+      "value": "re_test_0001"
+    },
+    {
+      "receiptId": "urn:uuid:4e976628-27ca-4962-82ae-533d4c2c9ca7",
+      "field": "target_ref",
+      "salt": "9938a8ead663269c91d3e25b0a38088ce3354fa438bbaf823becb9fce7fbf134",
+      "value": "re_test_0001"
+    }
+  ],
+  "checkpoints": [
+    {
+      "count": 1,
+      "head_digest": "sha256:183659549d5a657b68203cfc5e2bf000583f4ba3fac1a90300c942efbb56cba1",
+      "at": "2026-10-25T14:00:03.000Z",
+      "sealer_kid": "oar-test-sealer",
+      "sig": "1967391f8009c851e2cad8496d909d2a49d1d0bb78410bd52e934413b373c0bb32c5d175333d13a7ab43e6d08d50947bbacca348c567f2466b20b1422c4d700c"
+    },
+    {
+      "count": 2,
+      "head_digest": "sha256:b78689b701e4edd68e2978c64ced5b83432d87f1d4fdb47a00e5830574f0ed23",
+      "at": "2026-10-25T14:00:06.000Z",
+      "sealer_kid": "oar-test-sealer",
+      "sig": "b5bd37d718d9ea58476670296922c095bd5e455357c1d267419ee4bcc0a23932d10f8d043460d83cb796c7729866ab5208480c6131421b6f50ecaafbe39a070e"
+    },
+    {
+      "count": 3,
+      "head_digest": "sha256:c1446267e1b36e627fab8b43ffea1b707ebd5bbde718dc9e6fcbb296be9432d2",
+      "at": "2026-10-25T14:00:09.000Z",
+      "sealer_kid": "oar-test-sealer",
+      "sig": "f1cff8ca3df089324f6c0edded3a82521c2e439e7c86327fc00b0583c1570590a0edc6b2c00d4bb7a4279ea4dbf07edff517a0ed67c786ed54871ab2ab362202"
+    },
+    {
+      "count": 4,
+      "head_digest": "sha256:963c3e5249de71ed7febee9774d4dd499eaca72a3b9feb46ae9e27c41d1b4722",
+      "at": "2026-10-25T14:00:12.000Z",
+      "sealer_kid": "oar-test-sealer",
+      "sig": "97fc0596b2aee87f8c431de3f9f72a0c23bb247bbbfbfb86d78580b77ed7efb9fd0c85002bbbc647d8889417c0042875234fb381e301a3f2668edc1c99942102",
+      "anchors": [
+        {
+          "type": "rfc3161",
+          "tsa": "OAR Test Timestamp Authority",
+          "gen_time": "2026-10-25T14:10:00.000Z",
+          "token": "MIIFCgYJKoZIhvcNAQcCoIIE+zCCBPcCAQMxDzANBglghkgBZQMEAgEFADBoBgsqhkiG9w0BCRABBKBZJFcEVTBTAgEBBgkrBgEEAYaNHwEwLzALBglghkgBZQMEAgEEIE+J8cKaThrCncQzT63SP/i4gAvFtYgqSR5SbYF8JZSHAgEBGA8yMDI2MTAyNTE0MTAwMFqgggLYMIIC1DCCAb6gAwIBAgIBAjALBgkqhkiG9w0BAQswHDEaMBgGA1UEAwwRT0FSIFRlc3QgVFNBIFJvb3QwHhcNMjYwMTAxMDAwMDAwWhcNMzYwMTAxMDAwMDAwWjAnMSUwIwYDVQQDDBxPQVIgVGVzdCBUaW1lc3RhbXAgQXV0aG9yaXR5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqj4R3ct89mcXHcjWKDD6roieDCZVjSR+ZAj8sKdGD4QGwHSvVWiG9NqIWPsylP2jGbRPkI8w8FIVRStYaPf4f7cGTgJf+fTOb5RGgAdGdXwI2oprN5mibiILSQrHXJIVRvnjlq9fLU4MP++w887smOEtvXr/iLiXALNcheXaNbVw2bENVwmYJDqftEGQsJSiAjClYHGZVzq8h6ybEgsLfD+IsvBFWs+xGoq60MFmDN+1cp0E2YoGZGf+tAraeGj1zweOCxu9TQHwbPUk3ubWorTu7BPyaOWvMsa9SQ/jCUZgYscra5ja6Za9AGBLMkiPU8DOLvGZiTYTLME7xJZTdQIDAQABoxowGDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDCDALBgkqhkiG9w0BAQsDggEBACKmJ9X5eJEK/ZEPDbTIg7aF+BOj+vksVbmyj0D2FjgjVs5Xo7NYDf0NiKNi2gP6/x4uzC7wVRwMcSAp6nkkaTk94RvsyScGmKRKKpOph0OueASPX5jEZQLLvxrdbTcxYVcKkO7h9ZuNQimfzs9ArilQy9cWk3IQ23rvcxefpWiGTvyy4VhTzFISWBebfL04T+JUWjJTTqrxtvsNHIpDqn8IFRjlo1CnFUBMYYQ9mO37mL39MxzE2BW23j1TmcDeRyP7c7VMriVyCJIF1E4paQOLqmhBh6AK36K2egV/ulsb81V8mlvDdgYWxvoNgTeghZ0VYGQNk3JJSvaLBNgNFr0xggGZMIIBlQIBATAhMBwxGjAYBgNVBAMMEU9BUiBUZXN0IFRTQSBSb290AgECMA0GCWCGSAFlAwQCAQUAoE0wGgYJKoZIhvcNAQkDMQ0GCyqGSIb3DQEJEAEEMC8GCSqGSIb3DQEJBDEiBCBy6RBEg/bJlNd3wK9xdZoymBpCBEZHRRwbtYyx0lJFjTALBgkqhkiG9w0BAQsEggEAFOGrPwesLD27wi2Xkt7wsPjLWT5q464JT+3GyyaApH32iV4FTvjgfDPqgjWs4oW5lsv5URXJh0q7WmdH+lXWR4VCXMJ0LHyJGmHJEk0jU1Rp2cFuQm1n9GLm9yRh8JzveK7dVNF9U/UvS/UeBaiPszGBonmCITIfO/0Bek/WN83ZCttQrHeBrVUTXiDmwH8Tat52iPKd1ivokCQNN6QX2D6OY2PF00oSFQT4GhMw4zrcj/r2F7KWHE/m4P2+P7MHs19vj+qNOEFy39yKPhwH8OpTz+ByoEGpXMZOHNxBvcZzDFyLmXbLoC1qKRfLTBRwwB8mc5r3x0GN+EzSz2Hlew=="
+        }
+      ]
+    }
+  ],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+          "kid": "oar-test-issuer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    },
+    "sealer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "oJql9HpnWYAv-VX43C0qFKXJnSO-l_hkEn_5ODRVpPA",
+          "kid": "oar-test-sealer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "format": "aar-evidence/0.1",
+  "generated_at": "2026-10-15T14:00:10.000Z",
+  "org": {
+    "id": "org-example",
+    "name": "Example Store"
+  },
+  "scope": {
+    "complete": true
+  },
+  "receipts": [
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:00000000-0000-4000-8000-000000000001",
+        "org_id": "org-example",
+        "agent_id": "agent:support-1",
+        "run_id": "run:chat-42",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "instance_commitment": "sha256:a0d20fdaba36e3627a5bdf83c4b862e2e9b50271f81e97a57376166141822f4b",
+        "authorization_ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "principal": "policy:policy-1",
+        "reasons": [
+          "approval_required"
+        ],
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:01.000Z",
+        "phase": "decision",
+        "result": "held",
+        "consumption_commitment": "sha256:5df63cd6ca3d312eaa8b09d81827df59d7914d1f2d987ff7c07aad3125d8e95a"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "aar-test-issuer",
+        "sig": "7b2910cadfe5c2505d57af0a049d5d988429603cc85a5f070dcf572a74de84b85d2aed582d33e3b5f5e15b2b7ac2055f8d03dad4030ea6c79b161732a259050b"
+      },
+      "seal": {
+        "sealer_kid": "aar-test-sealer",
+        "seq": 1,
+        "sealed_at": "2026-10-15T14:00:01.000Z",
+        "sig": "9abfeb15233a8ea3a23b580028e7f77d55b0f60edd9cd6b05128a241b69c5fc418cb9d96ad4486453a25501f0cfaeb0a2591ffcf65de933600311c8427054302"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:00000000-0000-4000-8000-000000000002",
+        "org_id": "org-example",
+        "agent_id": "agent:support-1",
+        "run_id": "run:chat-42",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "instance_commitment": "sha256:a0d20fdaba36e3627a5bdf83c4b862e2e9b50271f81e97a57376166141822f4b",
+        "authorization_ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "principal": "approver:jordan-lee",
+        "reasons": [],
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:02.000Z",
+        "prev_receipt_hash": "sha256:300f4ec5aee1fa56b6278bede96053ef89eb952ec10e72c0e8058a85b6b849f4",
+        "phase": "decision",
+        "result": "approved",
+        "approval": {
+          "method": "passkey",
+          "approver": "approver:jordan-lee",
+          "at": "2026-10-15T14:00:02.000Z",
+          "assertion_digest": "sha256:96fa2899933cc0660e34f8b924a70cdee4180c6b20854dd303b4d15961c1dc50"
+        },
+        "decision_ref": "urn:uuid:00000000-0000-4000-8000-000000000001"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "aar-test-issuer",
+        "sig": "b0eca1fd89694e53ff3754cf0f5e6c956177fb552cd8426549abb1b949bb2cbce5223e8e0d3c03f8787b8aa1fa3e0e75eba962947b641db5952506013c103205"
+      },
+      "seal": {
+        "sealer_kid": "aar-test-sealer",
+        "seq": 2,
+        "sealed_at": "2026-10-15T14:00:02.000Z",
+        "sig": "67e2bffc9c69db8838cfeaab54d86ed3fa70275edf215fd254c477cf9fcfd157bb5872009aaa5ebb3c7c97a5a166684031b02e251ad3341ffb889ff9c145700a"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:00000000-0000-4000-8000-000000000003",
+        "org_id": "org-example",
+        "agent_id": "agent:support-1",
+        "run_id": "run:chat-42",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "instance_commitment": "sha256:a0d20fdaba36e3627a5bdf83c4b862e2e9b50271f81e97a57376166141822f4b",
+        "authorization_ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "principal": "policy:policy-1",
+        "reasons": [],
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:03.000Z",
+        "prev_receipt_hash": "sha256:e8e6ae70c5da206a53387a4c883b64ccbb4bc28da7911438438c2fdbe8417ec8",
+        "phase": "execution",
+        "result": "executed",
+        "decision_ref": "urn:uuid:00000000-0000-4000-8000-000000000001",
+        "target_ref_commitment": "sha256:a00621c980cebbb995f289867e02d92cca582bb94b65332c4f0bff47af0de571",
+        "state_before_commitment": "sha256:e5e9d7fccacfca2c61cdd58829d19d71b138c769b4e9d325be8ceaa5312d1e8e",
+        "state_after_commitment": "sha256:87c5c3fbb105c0d794378ab1e950e3c0495e8ef69c5d78ee65478c8f2fecaa13"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "aar-test-issuer",
+        "sig": "2539259d3a5a720f155d33a853a813603b355403d8d8004ca93a7ffaf40da92b0b7ff04ce2c8f34b42984f07b5157a08cdad14b07a265ee0bd385bd7ac883a0d"
+      },
+      "seal": {
+        "sealer_kid": "aar-test-sealer",
+        "seq": 3,
+        "sealed_at": "2026-10-15T14:00:03.000Z",
+        "sig": "b25801155c3791024f284e4ec9c71895d4d8bd330256f99360ce8c0f87b61812d71867942acf4589fd8d3ef88aa6bbeae8e1ee3e126a6f335ad58d654ae07507"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:00000000-0000-4000-8000-000000000004",
+        "org_id": "org-example",
+        "agent_id": "agent:support-1",
+        "run_id": "run:chat-42",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "instance_commitment": "sha256:a0d20fdaba36e3627a5bdf83c4b862e2e9b50271f81e97a57376166141822f4b",
+        "authorization_ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "principal": "policy:policy-1",
+        "reasons": [
+          "outcome_confirmed"
+        ],
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:04.000Z",
+        "prev_receipt_hash": "sha256:26bd68bd7aaa581d2c6a714ee276e0623d7d6b709269ca37a8d352c31330024b",
+        "phase": "confirmation",
+        "result": "confirmed",
+        "decision_ref": "urn:uuid:00000000-0000-4000-8000-000000000003"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "aar-test-issuer",
+        "sig": "1150a12d8159c21387b182fa1b144849384517ed7b174ae7652e3004dbb09d04217306ea376d8ed588cd7a916ae8adf717725cac4f4965a0c6035d732e234b0d"
+      },
+      "seal": {
+        "sealer_kid": "aar-test-sealer",
+        "seq": 4,
+        "sealed_at": "2026-10-15T14:00:04.000Z",
+        "sig": "00513f7781ec385f2caf701e4bf338b2cab7b1202dec9a9974d6f0824885070e7e83c6b2610e99a9e7939dc08ab84185feeb28fda6b183ae63e6efffed62100c"
+      }
+    }
+  ],
+  "disclosures": [
+    {
+      "receiptId": "urn:uuid:00000000-0000-4000-8000-000000000001",
+      "field": "instance",
+      "salt": "0101010101010101010101010101010101010101010101010101010101010101",
+      "value": {
+        "params": {
+          "type": "refund",
+          "orderId": "order-1001",
+          "amountCents": 2500,
+          "reason": "Arrived late"
+        },
+        "signals": null,
+        "idempotencyKey": "refund-1"
+      }
+    },
+    {
+      "receiptId": "urn:uuid:00000000-0000-4000-8000-000000000001",
+      "field": "consumption",
+      "salt": "0202020202020202020202020202020202020202020202020202020202020202",
+      "value": {
+        "dailyMoneyUsedBeforeCents": 0,
+        "dailyMoneyUsedAfterCents": 2500,
+        "dailyMoneyLimitCents": 500000,
+        "actionsLastHour": 0,
+        "customerActionsToday": 0
+      }
+    },
+    {
+      "receiptId": "urn:uuid:00000000-0000-4000-8000-000000000003",
+      "field": "target_ref",
+      "salt": "0303030303030303030303030303030303030303030303030303030303030303",
+      "value": "re_0001"
+    },
+    {
+      "receiptId": "urn:uuid:00000000-0000-4000-8000-000000000003",
+      "field": "state_before",
+      "salt": "0404040404040404040404040404040404040404040404040404040404040404",
+      "value": {
+        "order": "order-1001",
+        "totalCents": 12000,
+        "refundedCents": 0
+      }
+    },
+    {
+      "receiptId": "urn:uuid:00000000-0000-4000-8000-000000000003",
+      "field": "state_after",
+      "salt": "0505050505050505050505050505050505050505050505050505050505050505",
+      "value": {
+        "order": "order-1001",
+        "totalCents": 12000,
+        "refundedCents": 2500
+      }
+    }
+  ],
+  "checkpoints": [
+    {
+      "count": 4,
+      "head_digest": "sha256:0eb61a20eb9f0232b4fb024e2475e42174af6ab17bfdd0bdd5d17eed8733a2a9",
+      "at": "2026-10-15T14:00:10.000Z",
+      "sealer_kid": "aar-test-sealer",
+      "sig": "3749c080ae78067e8d9ff85a39357b5a9b9d120b6c67aeab263e273888bd40ba6a47858e18eacb6f597178a90e111fb6d4ff13404072562407a61ad759a8310e",
+      "anchors": [
+        {
+          "type": "rfc3161",
+          "tsa": "Tridris Test Timestamp Authority",
+          "gen_time": "2026-10-15T14:00:12.000Z",
+          "token": "MIIFGgYJKoZIhvcNAQcCoIIFCzCCBQcCAQMxDzANBglghkgBZQMEAgEFADBsBgsqhkiG9w0BCRABBKBdJFsEWTBXAgEBBgkrBgEEAYaNHwEwLzALBglghkgBZQMEAgEEIMjlpg2kxQKoQXWpjrmKv2h0p5CnhJxS5oW0uqY75jw3AgEBGA8yMDI2MTAxNTE0MDAxMloCAhCSoIIC4DCCAtwwggHGoAMCAQICAQIwCwYJKoZIhvcNAQELMCAxHjAcBgNVBAMMFVRyaWRyaXMgVGVzdCBUU0EgUm9vdDAeFw0yNjAxMDEwMDAwMDBaFw0zNjAxMDEwMDAwMDBaMCsxKTAnBgNVBAMMIFRyaWRyaXMgVGVzdCBUaW1lc3RhbXAgQXV0aG9yaXR5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp0LdWPVa2YBJis5zphiVoZFmoFXabdU/l9LcUG/snbDNp6gfTjnfnS1b8krEjki3Dlrsd9OH12amb2GUy7/EOJy221rfmJ7CvbQ86TZS6OFSuMPp0EwkAUhOg0YtxfDJwr7uTWpCWcr/VIByo5k0c1xXnVVMEFFLSpMkhhSY1TMrIStgC5t1lwrOD4dvgHmK0Y1dj65hbudu71DMQ1s/lyPC+Tpd9mBhre141AtVfK4A/jEAqP0o5KQ1E1bVdZr0iHim/NUDKoQBnr63Vz9PbdItZTGxW2IgHz0baEU4k8UOIL/LcpS0fp8HxXo17L0CS3mrLUmEokRu+4UuDL5guwIDAQABoxowGDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDCDALBgkqhkiG9w0BAQsDggEBAEqbAUPWL+g/BXJ9DO7DH84MWySapD75t7VrL04brZg8agDshVDt3jgXHxIZewh8UuoMrlGvPImaW0GRNSmzL+dLoqSkT6h8AGc3BlYJrmAkem2hipNE6r3uBp57HdDrSMjNzknAY1gq9Lap8f6be9zgFzWktGyqSXoTwe4iXlvpC5lRAVsIR+BzBi70hpOmqJykSVJZ+NgkCq+5owTf3/U0CH1RVYXGHrQj3yGGUdZIsq4na50n0UzPFxdyI7V58ZBc1Kxm649y1u+CirDhDZLEaX6L+FFvhL4fApcrGitT4lMbuCYbk5AkohBqiGlsg4HbY9BbR0YPPAK7PmKEIFsxggGdMIIBmQIBATAlMCAxHjAcBgNVBAMMFVRyaWRyaXMgVGVzdCBUU0EgUm9vdAIBAjANBglghkgBZQMEAgEFAKBNMBoGCSqGSIb3DQEJAzENBgsqhkiG9w0BCRABBDAvBgkqhkiG9w0BCQQxIgQgdj/P0HlEvsWRdwtrXTk9rqTlzHbPcvC5KTRvRbvu6/IwCwYJKoZIhvcNAQELBIIBAKDddHQI7T9vlU1sLWuEQGeJfryfPSiCRQ1MS74eMqTqbqRK81zw0mYyueFt717NqhpI8vtOYbpL0w7RXuTTxi70xxryIp8ziklCGzz527sTG5AlXlE9vgbJQjRXKuXEBciXncTSNmOCgNh6A5Fd179UJZetB868qP6I3s3yvQdiGhBjuIY7H9liU7QJl8Zr+hHdG2nYJ5aiwFyWu9UtjiY/tgbmnU0gHyOtoaCUCG6xVdc4mMZd8QS3cIn3+M9zKavCCnljl3PK6pib4Kooqj8aDPkJFTtcXw2Gh9+s40hQSGYgVzcVMIyCFuhW/vv9/aXOe+UVpgdmZfEX5+XZYMg="
+        }
+      ]
+    }
+  ],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+          "kid": "aar-test-issuer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    },
+    "sealer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "oJql9HpnWYAv-VX43C0qFKXJnSO-l_hkEn_5ODRVpPA",
+          "kid": "aar-test-sealer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  },
+  "adapter_snapshots": []
+}

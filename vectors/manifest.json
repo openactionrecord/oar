@@ -1,0 +1,125 @@
+{
+  "description": "Open Action Record test vectors. Every verifier must reach the expected result on every case. TEST KEYS ONLY.",
+  "test_private_keys_hex": {
+    "oar-test-issuer": "1111111111111111111111111111111111111111111111111111111111111111",
+    "oar-test-sealer": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "tsa_roots_file": "test-tsa-roots.json",
+  "cases": [
+    {
+      "file": "refund-lifecycle.json",
+      "description": "A $1,900 refund: held over the approval limit, approved with a passkey, executed with state before and after, confirmed; sealed, checkpointed and timestamped by the test authority. All values disclosed.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "timestamped",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    },
+    {
+      "file": "tampered-record.json",
+      "description": "refund-lifecycle with the held decision rewritten as \"allowed\".",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "chain",
+          "checkpoint",
+          "issuer_signature",
+          "seal",
+          "timestamp"
+        ]
+      }
+    },
+    {
+      "file": "tampered-disclosure.json",
+      "description": "refund-lifecycle with the disclosed state after the change edited ($190 refunded instead of $1,900).",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "disclosures"
+        ]
+      }
+    },
+    {
+      "file": "removed-record.json",
+      "description": "refund-lifecycle with the approval record removed.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "chain",
+          "checkpoint"
+        ]
+      }
+    },
+    {
+      "file": "issuer-signed.json",
+      "description": "A store credit recorded without a sealing service: issuer-signed only. Nothing disclosed.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "issuer-signed",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    },
+    {
+      "file": "issuer-signed.json",
+      "description": "The same bundle verified with seals required.",
+      "options": {
+        "tsa_roots": "test",
+        "require_seal": true
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "seal"
+        ]
+      }
+    },
+    {
+      "file": "not-confirmed.json",
+      "description": "A refund the payment API reported as succeeded but the read-back does not show, and a blocked 80% discount. The records verify; the outcomes are \"not_confirmed\" and \"denied\".",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "sealed",
+        "outcomes": [
+          "not_confirmed",
+          "denied"
+        ]
+      }
+    },
+    {
+      "file": "external-ref.json",
+      "description": "OAR approval and outcome evidence added to a receipt in another format (external_ref with the digest of its bytes).",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "sealed",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    }
+  ]
+}

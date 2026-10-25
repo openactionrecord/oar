@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+coverage/
+__pycache__/
+*.egg-info/
+.venv/
+python/build/
+oar-demo/
+.env
