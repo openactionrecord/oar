@@ -9,3 +9,5 @@
 - Records must never contain personal data in clear: values go behind commitments.
 - Wire identifiers keep the `aar_` prefix (`aar_version`, `/.well-known/aar-keys.json`) for compatibility.
 - Never commit real keys. Test keys in `vectors/` are public on purpose.
+- Releases: every published package (`packages/*`, `python/`) has the same version; `scripts/check-versions.mjs`
+  checks it against the release tag. Publishing runs only from `.github/workflows/release.yml`.

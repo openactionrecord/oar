@@ -11,6 +11,11 @@ First public release.
 - **`@openactionrecord/core`**: `createRecorder` (with `run()` to wrap an action end to end), a local sealing
   service with RFC 3161 timestamping, the reference verifier, action summaries, and a standalone WebCrypto verifier.
 - **`@openactionrecord/cli`**: `oar demo`, `oar verify` (with `--cross-check`), `oar inspect`, `oar html`, `oar keygen`.
+- **`@openactionrecord/mcp`**: `withOar(server)` checks and records every tool call of an MCP server.
+- **`@openactionrecord/claude-code`**: a Claude Code hook (`oar-claude-hook`) that checks tool calls against
+  `.oar/rules.json` (allow, hold for approval in Claude Code's prompt, deny) and records them; `bundle` exports a
+  session.
+- `createRecorder({ history })` continues one agent's chain across processes.
 - **`open-action-record`** (Python): verifier and `oar-verify`.
 - **Playground**: a static page that verifies bundles in the browser, with tamper buttons.
 - **Test vectors** shared by all verifiers, including compatibility cases and real evidence packages exported by Tridris.

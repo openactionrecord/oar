@@ -45,6 +45,12 @@ export interface RecorderOptions {
   policy?: unknown;
   /** Names the rules in `principal` ("policy:<id>"). Default: "default". */
   policyId?: string;
+  /**
+   * This agent's earlier records, and their disclosures, when one agent's actions are recorded by more than one
+   * process (a hook that runs once per tool call). The chain continues after the last record, actions in it can
+   * be continued with `action(id)`, and `bundle()` includes them. Use the same `org`, `agent` and `run`.
+   */
+  history?: { records: readonly OarRecord[]; disclosures?: readonly DisclosureInput[] };
   /** For tests and reproducible vectors. */
   now?: () => Date;
   randomId?: () => string;
@@ -177,11 +183,22 @@ export class Recorder {
     this.run_id = options.run ?? `run:${this.randomId()}`;
     this.authorizationRef = isSha256Digest(options.policy) ? options.policy : canonicalDigest(options.policy ?? { policy: 'none' });
     this.policyPrincipal = `policy:${options.policyId ?? 'default'}`;
+    if (options.history) this.restore(options.history);
   }
 
   /** Every record written so far, oldest first. */
   get records(): readonly OarRecord[] {
     return this.written;
+  }
+
+  /** The salts and values behind this recorder's commitments, to keep (secretly) for later disclosure. */
+  get disclosures(): readonly DisclosureInput[] {
+    return this.secrets;
+  }
+
+  /** The handle of an action recorded by this recorder or found in its `history`; undefined if unknown. */
+  action(id: string): ActionHandle | undefined {
+    return this.actions.get(id)?.handle;
   }
 
   /** Records the decision on an action. Returns the handle to use for the next steps. */
@@ -384,6 +401,39 @@ export class Recorder {
   }
 
   // ---- internals ----
+
+  private restore(history: NonNullable<RecorderOptions['history']>): void {
+    const rootOf = new Map<string, string>();
+    for (const record of history.records) {
+      const p = record.payload;
+      if (p.org_id !== this.options.org || p.agent_id !== this.options.agent) {
+        throw new Error('history: every record must have the same org and agent as this recorder');
+      }
+      // A step whose earlier record is missing stays its own action; verification reports the gap.
+      const root = p.decision_ref ? (rootOf.get(p.decision_ref) ?? p.decision_ref) : p.receipt_id;
+      rootOf.set(p.receipt_id, root);
+      const status = p.result as ActionHandle['status'];
+      const known = this.actions.get(root);
+      if (known) {
+        known.handle.lastRecordId = p.receipt_id;
+        known.handle.status = status;
+        known.principal = p.principal;
+      } else {
+        const handle: ActionHandle = {
+          id: root,
+          type: p.action.type,
+          target: p.action.target,
+          instanceCommitment: p.instance_commitment,
+          lastRecordId: p.receipt_id,
+          status,
+        };
+        this.actions.set(root, { handle, principal: p.principal, ...(p.external_ref ? { external: p.external_ref } : {}) });
+      }
+      this.lastIssuedAt = Math.max(this.lastIssuedAt, Date.parse(p.issued_at));
+      this.written.push(structuredClone(record));
+    }
+    this.secrets.push(...structuredClone(history.disclosures ?? []));
+  }
 
   private serial<R>(fn: () => Promise<R>): Promise<R> {
     const next = this.queue.then(fn, fn);

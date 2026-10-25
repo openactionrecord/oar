@@ -9,6 +9,7 @@ export default defineConfig({
       { find: /^@openactionrecord\/core\/standalone$/, replacement: src('./packages/core/src/standalone.ts') },
       { find: /^@openactionrecord\/core\/testing$/, replacement: src('./packages/core/src/testing/index.ts') },
       { find: /^@openactionrecord\/core$/, replacement: src('./packages/core/src/index.ts') },
+      { find: /^@openactionrecord\/mcp$/, replacement: src('./packages/mcp/src/index.ts') },
     ],
   },
   test: {

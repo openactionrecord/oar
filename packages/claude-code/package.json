@@ -1,0 +1,25 @@
+{
+  "name": "@openactionrecord/claude-code",
+  "version": "0.1.0",
+  "description": "A Claude Code hook that checks each tool call against your rules and records it as an Open Action Record.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" }
+  },
+  "bin": { "oar-claude-hook": "./dist/main.js" },
+  "files": ["dist", "README.md"],
+  "engines": { "node": ">=20.12" },
+  "keywords": ["claude-code", "hooks", "ai-agents", "audit", "receipts", "open-action-record", "oar"],
+  "repository": { "type": "git", "url": "git+https://github.com/openactionrecord/oar.git", "directory": "packages/claude-code" },
+  "homepage": "https://github.com/openactionrecord/oar#readme",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && chmod +x dist/main.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openactionrecord/core": "workspace:^"
+  }
+}

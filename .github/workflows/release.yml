@@ -1,0 +1,89 @@
+name: Release
+
+# Publishes the npm packages and the Python package when a GitHub release is published.
+# Setup (once): the NPM_TOKEN secret, and a PyPI trusted publisher for this workflow (README, "Releasing").
+# Run it by hand with "dry run" to see exactly what would be published, without publishing.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Show what would be published, without publishing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Every package has the release's version
+        if: github.event_name == 'release'
+        run: node scripts/check-versions.mjs "${{ github.event.release.tag_name }}"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test
+      - name: Vectors are up to date
+        run: pnpm vectors && git diff --exit-code vectors/
+      - run: pip install -e "python[test]" && pytest python/tests
+
+  npm:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Dry run
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        run: pnpm -r publish --access public --no-git-checks --dry-run
+      - name: Publish
+        if: github.event_name == 'release' || !inputs.dry_run
+        run: pnpm -r publish --access public --no-git-checks ${{ github.event.repository.private == false && '--provenance' || '' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install build && python -m build python
+      - name: Dry run
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        run: ls -l python/dist
+      - name: Publish
+        if: github.event_name == 'release' || !inputs.dry_run
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist

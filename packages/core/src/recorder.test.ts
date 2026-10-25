@@ -275,6 +275,49 @@ describe('Recorder: profiles and options', () => {
   });
 });
 
+describe('Recorder: history, for agents recorded by more than one process', () => {
+  const issuer = generateSigningKey('hook-issuer-1');
+  const options = { issuer, org: 'acme', agent: 'claude-code', run: 'run:session-1' };
+
+  it('continues the chain and the open action, and the whole bundle verifies in both verifiers', async () => {
+    const first = createRecorder(options);
+    await first.run({ type: 'Read', target: 'claude-code', params: { file: 'a.ts' }, execute: () => 'ok' });
+    const open = await first.decide({ type: 'Bash', target: 'claude-code', params: { command: 'ls' }, result: 'allowed' });
+
+    const second = createRecorder({ ...options, history: { records: first.records, disclosures: first.disclosures } });
+    const handle = second.action(open.id);
+    expect(handle?.status).toBe('allowed');
+    await second.execute(handle!, { after: { output: 'sha256:x' } });
+    await second.run({ type: 'Write', target: 'claude-code', params: { file: 'b.ts' }, execute: () => 'ok' });
+
+    const bundle = await second.bundle({ disclose: 'all' });
+    expect(bundle.records).toHaveLength(6);
+    expect(bundle.records[2]!.payload.prev_receipt_hash).toBeDefined();
+    const report = verifyBundle(bundle);
+    expect(report.result).toBe('pass');
+    expect((await loadStandaloneVerifier()(bundle, subtle)).result).toBe('pass');
+    const bash = summarize(bundle.records).find((a) => a.type === 'Bash');
+    expect(bash?.outcome).toBe('executed_unconfirmed');
+  });
+
+  it('still catches a record removed from the history', async () => {
+    const first = createRecorder(options);
+    for (let i = 0; i < 3; i++) await first.run({ type: 'Read', target: 'claude-code', params: { i }, execute: () => i });
+    const kept = first.records.filter((_, i) => i !== 2);
+    const second = createRecorder({ ...options, history: { records: kept } });
+    await second.run({ type: 'Read', target: 'claude-code', params: { i: 3 }, execute: () => 3 });
+    const report = verifyBundle(await second.bundle());
+    expect(report.result).toBe('fail');
+    expect(report.failedChecks).toContain('chain');
+  });
+
+  it('refuses records of another agent', async () => {
+    const other = createRecorder({ ...options, agent: 'someone-else' });
+    await other.run({ type: 'Read', target: 'claude-code', params: {}, execute: () => 1 });
+    expect(() => createRecorder({ ...options, history: { records: other.records } })).toThrow(/same org and agent/);
+  });
+});
+
 describe('parseBundle', () => {
   it('says what is wrong with a bad file', () => {
     expect(() => parseBundle({ format: 'x', records: 'no' })).toThrow(/format: expected "oar-bundle\/0.1"[\s\S]*records: expected an array/);
