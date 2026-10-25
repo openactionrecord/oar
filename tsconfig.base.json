@@ -29,6 +29,9 @@
       ],
       "@openactionrecord/core/testing": [
         "./packages/core/src/testing/index.ts"
+      ],
+      "@openactionrecord/mcp": [
+        "./packages/mcp/src/index.ts"
       ]
     }
   }

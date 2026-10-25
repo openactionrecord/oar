@@ -84,9 +84,28 @@ Runnable examples, all tested in CI:
 | Example | Shows |
 |---|---|
 | [`examples/quickstart.ts`](examples/quickstart.ts) | A refund end to end, written to `evidence.json` |
-| [`examples/tool-wrapper.ts`](examples/tool-wrapper.ts) | Wrap any tool (MCP handlers, OpenAI Agents SDK, LangChain) once; every call is recorded |
+| [`examples/tool-wrapper.ts`](examples/tool-wrapper.ts) | Wrap any tool (OpenAI Agents SDK, LangChain, your own) once; every call is recorded |
+| [`examples/mcp-server.ts`](examples/mcp-server.ts) | Wrap an MCP server in one line: reads run, a `DROP TABLE` waits for a person |
 | [`examples/sealer-server.ts`](examples/sealer-server.ts) | A separate sealing service over HTTP, so the issuer can't rewrite its own history |
 | [`examples/add-to-another-receipt.ts`](examples/add-to-another-receipt.ts) | Add approval and outcome evidence to a receipt in another format |
+
+## Where your agents already are
+
+**An MCP server, in one line** ([`@openactionrecord/mcp`](packages/mcp)):
+
+```ts
+const server = withOar(new McpServer({ name: 'prod-db', version: '1.0.0' }), { recorder, target: 'prod-db' });
+```
+
+Every tool registered afterwards is checked by your rules before it runs, and recorded. Denied and held calls never reach the tool.
+
+**Claude Code** ([`@openactionrecord/claude-code`](packages/claude-code)):
+
+```bash
+npx -y @openactionrecord/claude-code init     # example rules, and the hooks to add to .claude/settings.json
+```
+
+Each tool call is checked against `.oar/rules.json` (allow, hold for your approval in Claude Code's prompt, or deny) and recorded. `npx -y @openactionrecord/claude-code bundle` writes the session's records for `oar verify`.
 
 ## Verify a bundle
 
@@ -148,6 +167,8 @@ The full format is in **[SPEC.md](SPEC.md)**.
 |---|---|
 | [`@openactionrecord/core`](packages/core) | Write records (`createRecorder`), run a sealing service, verify, summarise. Node.js 20+. |
 | [`@openactionrecord/cli`](packages/cli) | `oar demo`, `oar verify`, `oar inspect`, `oar html`, `oar keygen` |
+| [`@openactionrecord/mcp`](packages/mcp) | `withOar(server)`: check and record every tool call of an MCP server |
+| [`@openactionrecord/claude-code`](packages/claude-code) | A Claude Code hook that checks and records each tool call |
 | [`open-action-record`](python) | Python verifier and `oar-verify` |
 | [Playground](packages/web) | A static page that verifies bundles in the browser |
 | [Test vectors](vectors) | Every verifier must pass them. They include records written by the first implementation. |
@@ -155,7 +176,7 @@ The full format is in **[SPEC.md](SPEC.md)**.
 ## Roadmap
 
 - Python writer (record actions from Python agents)
-- Ready-made adapters: MCP SDK middleware, OpenAI Agents SDK, LangChain, Vercel AI SDK, Claude Code hooks
+- Ready-made adapters for the OpenAI Agents SDK, LangChain and the Vercel AI SDK
 - Outcome readers for Stripe, Shopify and Postgres
 - COSE encoding and a SCITT registration profile
 - Publishing checkpoints to a public transparency log
@@ -171,6 +192,21 @@ Want one of these sooner, or something else? [Open an issue](https://github.com/
 **Does it store personal data?** Records hold salted commitments, never values. You keep the salts and disclose values only to the people who need them.
 
 **Who maintains it?** OAR is maintained by [Tridris](https://tridris.com), which uses it in its product. The format and these tools are free to use without Tridris. Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Releasing
+
+Releases publish every npm package and the Python package from GitHub ([`release.yml`](.github/workflows/release.yml)). One-time setup:
+
+1. On npmjs.com, make a **granular access token** with read and write access to the `@openactionrecord` packages only, and an expiry date.
+2. In this repository: **Settings → Secrets and variables → Actions → New repository secret**, named `NPM_TOKEN`.
+3. On pypi.org: **Your account → Publishing → Add a new pending publisher**, with project `open-action-record`, owner `openactionrecord`, repository `oar`, workflow `release.yml` and environment `pypi`. No PyPI token is needed.
+4. In this repository: **Settings → Environments → New environment**, named `pypi`.
+
+Each release:
+
+1. Set the same version in every `packages/*/package.json` and in `python/pyproject.toml`, and update [CHANGELOG.md](CHANGELOG.md).
+2. **Actions → Release → Run workflow** with "dry run" ticked, and check the list of files.
+3. **Releases → Draft a new release**, tag `v<version>` (for example `v0.1.0`), **Publish release**. The workflow checks the versions match, runs every test, then publishes.
 
 ## Contributing, security, licence
 
