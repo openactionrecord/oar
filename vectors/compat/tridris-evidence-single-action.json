@@ -1,0 +1,415 @@
+{
+  "format": "aar-evidence/0.1",
+  "generated_at": "2026-10-15T14:00:00.000Z",
+  "org": {
+    "id": "942a18e9-7957-40d5-be92-c789b7765607",
+    "name": "Maple & Pine"
+  },
+  "purpose": "dispute",
+  "scope": {
+    "action_id": "a1f1f40c-230b-49a5-8ca9-3b78442261d0",
+    "complete": false
+  },
+  "receipts": [
+    {
+      "seal": {
+        "seq": 1,
+        "sig": "16aebf5beed8bc49a886d3b156a8702ef3c09bcec11787876a040b44844562c7a44c2ab298c8668aafa590dabc0a70da2bdd71f45ab7052bbd1870271ce35a0a",
+        "sealed_at": "2026-10-15T14:00:00.000Z",
+        "sealer_kid": "tridris-sealer-1"
+      },
+      "payload": {
+        "phase": "decision",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "org_id": "942a18e9-7957-40d5-be92-c789b7765607",
+        "result": "held",
+        "run_id": "run:test",
+        "reasons": [
+          "approval_required"
+        ],
+        "agent_id": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:00.000Z",
+        "principal": "policy:bcd252de-a4c3-4d01-877f-ac7104add605",
+        "receipt_id": "urn:uuid:587a57cb-e138-48c1-879c-fc2b8dae5b88",
+        "aar_version": "0.3",
+        "authorization_ref": "sha256:89b7b18bba46c0c55ffbcc2d168945565ff7a34e99cf9cf4730d1c8b08106a64",
+        "instance_commitment": "sha256:4ccf61c7ab67203a5ab3af687ac86bec890db5c4e94232added29348ebac8e11",
+        "consumption_commitment": "sha256:7843a7ae2d86d17d1802d4db27b2e33a86f29e836df67bb4f978b28241b767ab"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "tridris-issuer-1",
+        "sig": "da8dde50e88a7d8e719b391d301ef072c2ed35970a2e7f4512b44d6d64055884b1dcd922349cd5772ab65e9f351e4398720a8d1516a5ebc9561292458afbfb06"
+      }
+    },
+    {
+      "seal": {
+        "seq": 2,
+        "sig": "e851a2b35612536fa97002bcf973027519fd063d8d3334c319b34eb69b16f430d33fd02bdbbc60834793cd871d79ded7c8cc669a70643334690a3a9d9fc4cb0f",
+        "sealed_at": "2026-10-15T14:00:00.000Z",
+        "sealer_kid": "tridris-sealer-1"
+      },
+      "payload": {
+        "phase": "decision",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "org_id": "942a18e9-7957-40d5-be92-c789b7765607",
+        "result": "approved",
+        "run_id": "run:test",
+        "reasons": [
+          "approval_required"
+        ],
+        "agent_id": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "approval": {
+          "at": "2026-10-15T14:00:00.000Z",
+          "method": "button",
+          "approver": "approver:jordan-lee"
+        },
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:00.000Z",
+        "principal": "approver:jordan-lee",
+        "receipt_id": "urn:uuid:0e6795e1-c506-46e1-9b57-a8ebdd1f8bcc",
+        "aar_version": "0.3",
+        "decision_ref": "urn:uuid:587a57cb-e138-48c1-879c-fc2b8dae5b88",
+        "authorization_ref": "sha256:89b7b18bba46c0c55ffbcc2d168945565ff7a34e99cf9cf4730d1c8b08106a64",
+        "prev_receipt_hash": "sha256:6d30b48f16b28fdb8252f4f899b15efc490d7087ce7369d6305f4a9ca6c4c3fe",
+        "instance_commitment": "sha256:c0a6a56047633aacf8cffdfc00f501931b5b99de1a2d870f2e7e209f030a5698"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "tridris-issuer-1",
+        "sig": "ef81dec4dc6a2d6eedd54818b033f04fd9ac97ac4ee73bf84db44a35c2c51bc49937a066ec1c11666d80c75b88d8eb648b3881d1c4aba353d5198e70a053db0f"
+      }
+    },
+    {
+      "seal": {
+        "seq": 3,
+        "sig": "ef3dcf0e0958ab634ebf8f35a57adee869bde7dab108282f44fa53d68f34e9ce33ba44cf4cfc323eecfc33bbfce4c18e7dec36bf8f7c459f6560475cdaf3e80a",
+        "sealed_at": "2026-10-15T14:00:00.000Z",
+        "sealer_kid": "tridris-sealer-1"
+      },
+      "payload": {
+        "phase": "execution",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "org_id": "942a18e9-7957-40d5-be92-c789b7765607",
+        "result": "executed",
+        "run_id": "run:test",
+        "reasons": [
+          "approval_required"
+        ],
+        "agent_id": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "approval": {
+          "at": "2026-10-15T14:00:00.000Z",
+          "method": "button",
+          "approver": "approver:jordan-lee"
+        },
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:00.000Z",
+        "principal": "approver:jordan-lee",
+        "receipt_id": "urn:uuid:e37a6d2d-150e-4607-8c30-b8649668407e",
+        "aar_version": "0.3",
+        "decision_ref": "urn:uuid:0e6795e1-c506-46e1-9b57-a8ebdd1f8bcc",
+        "authorization_ref": "sha256:89b7b18bba46c0c55ffbcc2d168945565ff7a34e99cf9cf4730d1c8b08106a64",
+        "prev_receipt_hash": "sha256:80133b6e097766deed4a2ba1189bd79b35003350d78d42398d29b1050962947f",
+        "instance_commitment": "sha256:a4b6574f984cdd87eac0683347b5965cf6b2c940fa9eebee65fec875f19b30fe",
+        "target_ref_commitment": "sha256:5513a1f9fd5268085188d8bab21dcd7c1fbed885fbf3f22e8fc7679fb2106154",
+        "state_after_commitment": "sha256:3f3229cc1bbf7a546e27ffd4381edb9322b1b2bb719f89473f8a7c2a958d8b28",
+        "state_before_commitment": "sha256:6363fe7e540a597b2ec42b4ed08c2a41be74e2c31afbf12c00e22fd8fdb599ef"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "tridris-issuer-1",
+        "sig": "1bdd4e635b89d7d8d8d9618e5f34dd9ad8f92fe5a7fd7a580be9e7145c5420035268e37aec950c264b4f432dc42880766be1b1505cd74df422e504411cbe3b0e"
+      }
+    },
+    {
+      "seal": {
+        "seq": 4,
+        "sig": "91726e33f077c34e62054e9c22851af5a5d102d5f4cf7b8e88a1d255b3efa906fe2c9c8d7d90ebc2c0f20cf48af6f2fe83216c1801882731264993dd8d76500d",
+        "sealed_at": "2026-10-15T14:00:00.000Z",
+        "sealer_kid": "tridris-sealer-1"
+      },
+      "payload": {
+        "phase": "confirmation",
+        "action": {
+          "type": "refund",
+          "target": "payments.refunds"
+        },
+        "org_id": "942a18e9-7957-40d5-be92-c789b7765607",
+        "result": "confirmed",
+        "run_id": "run:test",
+        "reasons": [
+          "outcome_confirmed"
+        ],
+        "agent_id": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "enforced": true,
+        "issued_at": "2026-10-15T14:00:00.000Z",
+        "principal": "approver:jordan-lee",
+        "receipt_id": "urn:uuid:670ad080-7ac7-4197-b1e8-8c18c3154cc5",
+        "aar_version": "0.3",
+        "decision_ref": "urn:uuid:e37a6d2d-150e-4607-8c30-b8649668407e",
+        "authorization_ref": "sha256:89b7b18bba46c0c55ffbcc2d168945565ff7a34e99cf9cf4730d1c8b08106a64",
+        "prev_receipt_hash": "sha256:14a8b0be49821cb066002cce9f2cc60b3cf6d98712b90de8b4c217bed154beb6",
+        "instance_commitment": "sha256:27ea1c7e4a3cf0fac5e910c399d9c4b40181ffb98a25abc61b9c4356222d897b",
+        "target_ref_commitment": "sha256:7fad9b4fe1a61f9af80ba8d03a8305ae54669c29bb92c8982c487511aadef32e"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "tridris-issuer-1",
+        "sig": "43160cbcc7e543203954df41c4e9a5f369475133f1296b15d2cbe1b56ef92fbf86c566e5144136b7971ea586f6080c8c538c8550283878766781b54bd53eea0c"
+      }
+    }
+  ],
+  "disclosures": [
+    {
+      "receiptId": "urn:uuid:0e6795e1-c506-46e1-9b57-a8ebdd1f8bcc",
+      "field": "instance",
+      "salt": "6029e53e2f8f912ec854a209c1e2ba8da15b49db2b70a956c0c165b8828298f8",
+      "value": {
+        "params": {
+          "type": "refund",
+          "reason": "Arrived damaged",
+          "orderId": "da1b1c6e-aa5f-422a-9526-a6f520a13bd8",
+          "amountCents": 190000
+        },
+        "signals": null,
+        "idempotencyKey": "key-ba6e9c36-370d-496c-8f85-f9b8bb6bf958"
+      }
+    },
+    {
+      "receiptId": "urn:uuid:587a57cb-e138-48c1-879c-fc2b8dae5b88",
+      "field": "consumption",
+      "salt": "e44afcd674d4db2da9bcf7b1a65b8bf339f53ed587708ab8690d7dffd1b07d15",
+      "value": {
+        "actionsLastHour": 0,
+        "customerActionsToday": 0,
+        "dailyMoneyLimitCents": 500000,
+        "dailyMoneyUsedAfterCents": 190000,
+        "dailyMoneyUsedBeforeCents": 0
+      }
+    },
+    {
+      "receiptId": "urn:uuid:587a57cb-e138-48c1-879c-fc2b8dae5b88",
+      "field": "instance",
+      "salt": "b35656cc4af785edc3de089b545d4fdecbab977ef453eea64ebd9c3085b10fe1",
+      "value": {
+        "params": {
+          "type": "refund",
+          "reason": "Arrived damaged",
+          "orderId": "da1b1c6e-aa5f-422a-9526-a6f520a13bd8",
+          "amountCents": 190000
+        },
+        "signals": null,
+        "idempotencyKey": "key-ba6e9c36-370d-496c-8f85-f9b8bb6bf958"
+      }
+    },
+    {
+      "receiptId": "urn:uuid:670ad080-7ac7-4197-b1e8-8c18c3154cc5",
+      "field": "instance",
+      "salt": "f8a2180eaab0c78370aa0f7caa0fa47830456ce05eff36df221efd2262a3e036",
+      "value": {
+        "params": {
+          "type": "refund",
+          "reason": "Arrived damaged",
+          "orderId": "da1b1c6e-aa5f-422a-9526-a6f520a13bd8",
+          "amountCents": 190000
+        },
+        "signals": null,
+        "idempotencyKey": "key-ba6e9c36-370d-496c-8f85-f9b8bb6bf958"
+      }
+    },
+    {
+      "receiptId": "urn:uuid:670ad080-7ac7-4197-b1e8-8c18c3154cc5",
+      "field": "target_ref",
+      "salt": "ed8593953bf5dbb89e5f8e41b2471b8d0c26ad17b5f69a70cdefae0f6efdafa8",
+      "value": "refund_30e32884-d9fa-40ca-94f4-7316330356a5"
+    },
+    {
+      "receiptId": "urn:uuid:e37a6d2d-150e-4607-8c30-b8649668407e",
+      "field": "instance",
+      "salt": "ad0156814b679a9909d6de46395c1b445e796ebdc9837c63c65694e9be376f9c",
+      "value": {
+        "params": {
+          "type": "refund",
+          "reason": "Arrived damaged",
+          "orderId": "da1b1c6e-aa5f-422a-9526-a6f520a13bd8",
+          "amountCents": 190000
+        },
+        "signals": null,
+        "idempotencyKey": "key-ba6e9c36-370d-496c-8f85-f9b8bb6bf958"
+      }
+    },
+    {
+      "receiptId": "urn:uuid:e37a6d2d-150e-4607-8c30-b8649668407e",
+      "field": "state_after",
+      "salt": "33c059397176638da6d247f278c9e9c8c759393823dbf9ada2edfc2b0dcd6f00",
+      "value": {
+        "order": "da1b1c6e-aa5f-422a-9526-a6f520a13bd8",
+        "totalCents": 300000,
+        "refundedCents": 190000
+      }
+    },
+    {
+      "receiptId": "urn:uuid:e37a6d2d-150e-4607-8c30-b8649668407e",
+      "field": "state_before",
+      "salt": "7530052796b918e1fa437673ab0dd49032e209bac04caddff42a71d3a5d8b609",
+      "value": {
+        "order": "da1b1c6e-aa5f-422a-9526-a6f520a13bd8",
+        "totalCents": 300000,
+        "refundedCents": 0
+      }
+    },
+    {
+      "receiptId": "urn:uuid:e37a6d2d-150e-4607-8c30-b8649668407e",
+      "field": "target_ref",
+      "salt": "e48e238988f46899d8734f470bf951a89d1c6fa709a64b727a4388d5d0590a67",
+      "value": "refund_30e32884-d9fa-40ca-94f4-7316330356a5"
+    }
+  ],
+  "checkpoints": [
+    {
+      "count": 8,
+      "head_digest": "sha256:3b92acf2bdf037ed8c5805578175c97a006aecf241e323d6e22e689b1581916d",
+      "at": "2026-10-15T14:00:00.000Z",
+      "sealer_kid": "tridris-sealer-1",
+      "sig": "04b1df41eadbe5b1082ff992f81d29208f856c8c3456476ad355817ca5913e559ace39781c150f8233949828ed5a859fe473c919880aaa565974d66f8d3d630b"
+    }
+  ],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "N9T2SsMlhaV5EHxVbxc7qX3ep3D4ZCHJfRffknPR9Qo",
+          "kid": "tridris-issuer-1",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    },
+    "sealer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "LdWvEAdA3z4dqpYiYffHSdJ5tLNdY8_k_L4A_NC-aAU",
+          "kid": "tridris-sealer-1",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  },
+  "adapter_snapshots": [
+    {
+      "action_id": "a1f1f40c-230b-49a5-8ca9-3b78442261d0",
+      "type": "refund",
+      "status": "executed",
+      "target_ref": "refund_30e32884-d9fa-40ca-94f4-7316330356a5",
+      "captured_at": "2026-10-15T14:00:00.000Z",
+      "refund": {
+        "refundId": "refund_30e32884-d9fa-40ca-94f4-7316330356a5",
+        "paymentId": "pay_test_1",
+        "amountCents": 190000,
+        "created": "2026-10-15T14:00:00.000Z"
+      },
+      "order": {
+        "number": "#T1",
+        "totalCents": 300000,
+        "refundedCents": 190000
+      }
+    }
+  ],
+  "verification": {
+    "result": "pass",
+    "receipts": [
+      {
+        "receiptId": "urn:uuid:587a57cb-e138-48c1-879c-fc2b8dae5b88",
+        "agentId": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "seq": 1,
+        "checks": {
+          "issuer_signature": "pass",
+          "seal": "pass",
+          "chain": "pass",
+          "checkpoint": "pass",
+          "disclosures": "pass",
+          "timestamp": "not_checked"
+        },
+        "result": "pass",
+        "messages": [
+          "Sealed; outside timestamp pending."
+        ]
+      },
+      {
+        "receiptId": "urn:uuid:0e6795e1-c506-46e1-9b57-a8ebdd1f8bcc",
+        "agentId": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "seq": 2,
+        "checks": {
+          "issuer_signature": "pass",
+          "seal": "pass",
+          "chain": "pass",
+          "checkpoint": "pass",
+          "disclosures": "pass",
+          "timestamp": "not_checked"
+        },
+        "result": "pass",
+        "messages": [
+          "Sealed; outside timestamp pending."
+        ]
+      },
+      {
+        "receiptId": "urn:uuid:e37a6d2d-150e-4607-8c30-b8649668407e",
+        "agentId": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "seq": 3,
+        "checks": {
+          "issuer_signature": "pass",
+          "seal": "pass",
+          "chain": "pass",
+          "checkpoint": "pass",
+          "disclosures": "pass",
+          "timestamp": "not_checked"
+        },
+        "result": "pass",
+        "messages": [
+          "Sealed; outside timestamp pending."
+        ]
+      },
+      {
+        "receiptId": "urn:uuid:670ad080-7ac7-4197-b1e8-8c18c3154cc5",
+        "agentId": "agent:66de2aeb-da53-47d7-9e91-8a31d0e39256",
+        "seq": 4,
+        "checks": {
+          "issuer_signature": "pass",
+          "seal": "pass",
+          "chain": "pass",
+          "checkpoint": "pass",
+          "disclosures": "pass",
+          "timestamp": "not_checked"
+        },
+        "result": "pass",
+        "messages": [
+          "Sealed; outside timestamp pending."
+        ]
+      }
+    ],
+    "checkpoint": {
+      "count": 8,
+      "at": "2026-10-15T14:00:00.000Z"
+    },
+    "failedChecks": [],
+    "messages": [
+      "All 4 records passed verification.",
+      "No outside timestamp covers these records yet."
+    ]
+  }
+}

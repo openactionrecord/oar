@@ -330,10 +330,21 @@ def _check_disclosures(entries, disclosures) -> list[str]:
 def outcomes(bundle: Any) -> list[str]:
     """The outcome of each action in the bundle, in order: "confirmed", "not_confirmed", "denied", ..."""
     b = parse_bundle(bundle)
+    by_id = {r["payload"].get("receipt_id"): r["payload"] for r in b["records"]}
+
+    def action_key(p: dict) -> str:
+        # Follow decision_ref back to the action's first record (instance commitments may be re-salted per record).
+        current = p
+        for _ in range(16):
+            parent = by_id.get(current.get("decision_ref"))
+            if parent is None:
+                break
+            current = parent
+        return current.get("decision_ref") or current.get("receipt_id")
+
     groups: dict[str, list[dict]] = {}
     for r in b["records"]:
-        p = r["payload"]
-        groups.setdefault(p.get("instance_commitment") or p.get("receipt_id"), []).append(p)
+        groups.setdefault(action_key(r["payload"]), []).append(r["payload"])
     result = []
     for items in groups.values():
         def last(pred):

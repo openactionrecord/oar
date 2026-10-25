@@ -15,6 +15,7 @@ import {
   type RecordResult,
 } from './record.js';
 import type { SealingService } from './sealer.js';
+import { actionKey } from './summary.js';
 import type { DisclosureField, DisclosureInput, VerificationKeys } from './verify.js';
 
 // The developer API: record what an agent's action did, step by step or around a function you already have.
@@ -354,7 +355,7 @@ export class Recorder {
     await this.queue;
     const instance = options.actionId ? this.actions.get(options.actionId)?.handle.instanceCommitment : undefined;
     if (options.actionId && !instance) throw new Error(`Unknown action ${options.actionId}`);
-    const records = instance ? this.written.filter((r) => r.payload.instance_commitment === instance) : [...this.written];
+    const records = options.actionId ? this.written.filter((r) => actionKey(r, this.written) === options.actionId) : [...this.written];
     const ids = new Set(records.map((r) => r.payload.receipt_id));
     const disclose = options.disclose ?? 'none';
     const disclosures =

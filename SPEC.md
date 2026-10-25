@@ -70,7 +70,7 @@ OAR does not define how agents are built or how rules are written. It records wh
 | `agent_id` | yes | The agent. Each agent has its own chain. |
 | `run_id` | yes | Groups the actions of one conversation, job or session. |
 | `action` | yes | `{ "type": <kind of action>, "target": <system it acts on> }`, for example `{ "type": "refund", "target": "stripe" }`. Never personal data. |
-| `instance_commitment` | yes | Commitment to the exact action instance: its type, parameters and idempotency key. Every record of one action carries the same value. |
+| `instance_commitment` | yes | Commitment to the exact action instance: its type, parameters and idempotency key. A writer MAY reuse the action's commitment on each of its records or commit afresh (new salt) on each; records of one action are linked by `decision_ref`, not by this value. |
 | `authorization_ref` | yes | `D(rules)`: the version of the rules that decided. |
 | `principal` | yes | Who decided: `"policy:<id>"`, or `"approver:<ref>"` for a person. |
 | `approval` | no | `{ "method": "standing_mandate" \| "button" \| "passkey", "approver"?, "at", "assertion_digest"? }` (section 4.3) |
@@ -171,7 +171,7 @@ Inputs: the records, the disclosures given (optional), the checkpoints, the issu
 
 The result is `pass` only if no check fails anywhere. Verifiers SHOULD let users supply keys obtained independently (for example from the published key sets) to rule out a substituted bundle.
 
-**Outcome.** Verifiers SHOULD also report each action's outcome from its records: `confirmed`, `not_confirmed`, executed without confirmation, `failed`, held awaiting approval, `denied`, `rejected` or `expired`.
+**Outcome.** Verifiers SHOULD also report each action's outcome from its records, grouping the records of one action by following `decision_ref` back to its first record: `confirmed`, `not_confirmed`, executed without confirmation, `failed`, held awaiting approval, `denied`, `rejected` or `expired`.
 
 ## 7. Reason codes
 
