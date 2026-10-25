@@ -1,0 +1,9 @@
+{
+  "description": "Records written by the first implementation, under the format's earlier name (Agent Action Receipts, AAR 0.3, evidence format \"aar-evidence/0.1\"). Verifiers must keep accepting them. TEST KEYS ONLY.",
+  "tsa_roots_file": "test-tsa-roots.json",
+  "cases": [
+    { "file": "aar-0.3-refund.json", "description": "One refund held, approved with a passkey, executed (state before and after), and confirmed; checkpoint timestamped by a test authority.", "options": { "tsa_roots": "test" }, "expect": { "result": "pass", "level": "timestamped", "outcomes": ["confirmed"] } },
+    { "file": "aar-0.3-refund-tampered.json", "description": "The disclosed state after the change edited.", "options": { "tsa_roots": "test" }, "expect": { "result": "fail", "failedChecks": ["disclosures"] } },
+    { "file": "aar-0.3-refund-tampered-timestamp.json", "description": "One byte of the timestamp token changed.", "options": { "tsa_roots": "test" }, "expect": { "result": "fail", "failedChecks": ["timestamp"] } }
+  ]
+}

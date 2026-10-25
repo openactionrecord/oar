@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "open-action-record"
+version = "0.1.0"
+description = "Verify Open Action Records: signed proof of what an AI agent's action actually changed, and who approved it."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = ["cryptography>=42", "asn1crypto>=1.5", "rfc8785>=0.1.4"]
+keywords = ["ai-agents", "audit", "receipts", "verification", "provenance", "open-action-record", "oar"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "Topic :: Security :: Cryptography",
+]
+
+[project.urls]
+Homepage = "https://github.com/openactionrecord/oar"
+Source = "https://github.com/openactionrecord/oar"
+Specification = "https://github.com/openactionrecord/oar/blob/main/SPEC.md"
+
+[project.scripts]
+oar-verify = "open_action_record.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+open_action_record = ["tsa_roots.json", "py.typed"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
