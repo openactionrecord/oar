@@ -2,7 +2,7 @@ import type { DisclosureInput, VerificationReport } from './verify.js';
 import type { OarRecord } from './record.js';
 
 // Turns records into the story of each action, in plain words: what was asked, who approved it, what changed,
-// and whether the system of record confirms it. Records of one action share the same instance commitment.
+// and whether the system of record confirms it.
 
 export type Outcome =
   | 'confirmed'
@@ -63,7 +63,7 @@ export function summarize(records: readonly OarRecord[], disclosures: readonly D
   const passed = new Map(report?.receipts.map((r) => [r.receiptId, r.result === 'pass']) ?? []);
   const groups = new Map<string, OarRecord[]>();
   for (const r of records) {
-    const key = r.payload?.instance_commitment ?? r.payload?.receipt_id;
+    const key = actionKey(r, records);
     const list = groups.get(key) ?? [];
     list.push(r);
     groups.set(key, list);
@@ -137,4 +137,21 @@ function step(r: OarRecord, verified: boolean | undefined): ActionStep {
       text = p.result === 'confirmed' ? 'Confirmed in the system of record' : `NOT confirmed in the system of record${why}`;
   }
   return { phase, result: p.result, at: p.issued_at, by: p.principal, reasons, text, ...(verified !== undefined ? { verified } : {}) };
+}
+
+/**
+ * Which action a record belongs to: follow `decision_ref` back to the action's first record and use its id. When
+ * the chain leaves the set (a partial bundle), the id it points to is used, so the remaining records still group.
+ * Instance commitments are not used: writers may re-salt them on every record.
+ */
+export function actionKey(record: OarRecord, records: readonly OarRecord[]): string {
+  const byId = new Map(records.map((r) => [r.payload?.receipt_id, r]));
+  let current = record;
+  for (let i = 0; i < 16; i++) {
+    const ref = current.payload?.decision_ref;
+    const parent = ref ? byId.get(ref) : undefined;
+    if (!parent) break;
+    current = parent;
+  }
+  return current.payload?.decision_ref ?? current.payload?.receipt_id ?? current.payload?.instance_commitment;
 }

@@ -154,8 +154,10 @@ var OUTCOME = {
 var LEVEL = { 'issuer-signed': 'Issuer-signed only', sealed: 'Sealed by a separate service', timestamped: 'Sealed + outside timestamp' };
 
 function stories(pkg) {
-  var recs = pkg.records || pkg.receipts || [], groups = {}, order = [];
-  recs.forEach(function (r) { var k = r.payload && (r.payload.instance_commitment || r.payload.receipt_id); if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(r); });
+  var recs = pkg.records || pkg.receipts || [], groups = {}, order = [], byId = {};
+  recs.forEach(function (r) { byId[r.payload && r.payload.receipt_id] = r; });
+  function key(r) { var cur = r; for (var i = 0; i < 16; i++) { var parent = cur.payload.decision_ref && byId[cur.payload.decision_ref]; if (!parent) break; cur = parent; } return cur.payload.decision_ref || cur.payload.receipt_id; }
+  recs.forEach(function (r) { if (!r.payload) return; var k = key(r); if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(r); });
   return order.map(function (k) {
     var list = groups[k];
     function last(f) { for (var i = list.length - 1; i >= 0; i--) if (f(list[i].payload)) return list[i]; return null; }

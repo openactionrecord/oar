@@ -59,4 +59,4 @@ export {
 } from './sealer.js';
 export { anchorDigest, verifyTimestampToken, type TimestampResult } from './timestamp/timestamp.js';
 export { TSA_ROOTS, type TsaRoot } from './timestamp/tsa-roots.js';
-export { summarize, OUTCOME_LABELS, type ActionSummary, type ActionStep, type Outcome } from './summary.js';
+export { summarize, actionKey, OUTCOME_LABELS, type ActionSummary, type ActionStep, type Outcome } from './summary.js';

@@ -13,4 +13,4 @@ First public release.
 - **`@openactionrecord/cli`**: `oar demo`, `oar verify` (with `--cross-check`), `oar inspect`, `oar html`, `oar keygen`.
 - **`open-action-record`** (Python): verifier and `oar-verify`.
 - **Playground**: a static page that verifies bundles in the browser, with tamper buttons.
-- **Test vectors** shared by all verifiers, including compatibility cases.
+- **Test vectors** shared by all verifiers, including compatibility cases and real evidence packages exported by Tridris.

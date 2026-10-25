@@ -13,3 +13,5 @@ All keys here are **test keys**, published on purpose. Never use them for anythi
 
 Each case lists `expect.result`, and where relevant `level`, `failedChecks` and the `outcomes` of the actions in
 the bundle.
+- `compat/tridris-evidence-*.json`: real evidence packages exported by the Tridris product, which writes OAR
+  records and re-salts each record's commitments. Records of one action are grouped by `decision_ref`.
