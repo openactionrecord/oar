@@ -10,6 +10,8 @@ Commands, descriptions and session keys are **never written in clear**: each rec
 hermes plugins install openactionrecord/oar/integrations/hermes --enable
 ```
 
+Hermes asks whether to install the plugin's Python dependency (`open-action-record`): answer **yes**. If you installed without a terminal (scripts, CI), run `hermes plugins enable oar` afterwards to finish.
+
 Or, if you manage Hermes's Python environment yourself: `pip install open-action-record`, then `hermes plugins enable oar`.
 
 ## Use
