@@ -74,8 +74,8 @@ footer{border-top:1px solid var(--line);padding:20px 0 40px;color:var(--muted);f
   <h1>Your agent says it did it.<br>OAR proves what actually changed, and who approved it.</h1>
   <p class="lede">An open record format for AI agent actions: the decision, <b>the person who approved this exact action</b>, <b>the state before and after</b>, and <b>a confirmation read back from the system of record</b>. Signed, chained, optionally sealed and timestamped, with no personal data in clear. This page verifies records <b>entirely in your browser</b>; nothing is uploaded.</p>
   <div class="cta">
-    <span class="cmd">git clone https://github.com/openactionrecord/oar</span>
-    <span class="cmd">pnpm install &amp;&amp; pnpm build &amp;&amp; pnpm demo</span>
+    <span class="cmd">npx @openactionrecord/cli demo</span>
+    <span class="cmd">npm i @openactionrecord/core</span>
     <a class="btn" href="${REPO}">GitHub</a>
     <a class="btn" href="${REPO}/blob/main/SPEC.md">Specification</a>
   </div>
@@ -127,7 +127,7 @@ const out = await oar.run({
   confirm: (refund) => stripe.refunds.retrieve(refund.id).then((r) => r.status === 'succeeded'),
 });
 
-await writeFile('evidence.json', JSON.stringify(await oar.bundle()));   // verify it here, or: pnpm oar verify evidence.json</pre>
+await writeFile('evidence.json', JSON.stringify(await oar.bundle()));   // verify it here, or: npx @openactionrecord/cli verify evidence.json</pre>
 </div></section>
 
 <footer><div class="wrap">

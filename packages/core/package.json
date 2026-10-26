@@ -1,20 +1,51 @@
 {
   "name": "@openactionrecord/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Write and verify Open Action Records: signed proof of what an AI agent's action actually changed, and who approved it.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./standalone": { "types": "./dist/standalone.d.ts", "default": "./dist/standalone.js" },
-    "./testing": { "types": "./dist/testing/index.d.ts", "default": "./dist/testing/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./standalone": {
+      "types": "./dist/standalone.d.ts",
+      "default": "./dist/standalone.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    }
   },
-  "files": ["dist", "README.md"],
-  "engines": { "node": ">=20.12" },
-  "keywords": ["ai-agents", "agent", "audit", "receipts", "provenance", "mcp", "evidence", "ed25519", "rfc8785", "rfc3161", "open-action-record", "oar"],
-  "repository": { "type": "git", "url": "git+https://github.com/openactionrecord/oar.git", "directory": "packages/core" },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.12"
+  },
+  "keywords": [
+    "ai-agents",
+    "agent",
+    "audit",
+    "receipts",
+    "provenance",
+    "mcp",
+    "evidence",
+    "ed25519",
+    "rfc8785",
+    "rfc3161",
+    "open-action-record",
+    "oar"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openactionrecord/oar.git",
+    "directory": "packages/core"
+  },
   "homepage": "https://github.com/openactionrecord/oar#readme",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

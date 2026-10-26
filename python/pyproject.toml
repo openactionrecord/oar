@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-action-record"
-version = "0.1.0"
+version = "0.1.1"
 description = "Verify Open Action Records: signed proof of what an AI agent's action actually changed, and who approved it."
 readme = "README.md"
 license = "Apache-2.0"

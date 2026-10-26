@@ -3,4 +3,4 @@
 from .verify import BundleError, RecordReport, Report, outcomes, parse_bundle, verify_bundle
 
 __all__ = ["BundleError", "RecordReport", "Report", "outcomes", "parse_bundle", "verify_bundle"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"
