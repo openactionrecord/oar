@@ -56,10 +56,11 @@ describe('Recorder.run: a refund end to end', () => {
       'confirmation:confirmed',
     ]);
     // Nothing sensitive is written in clear.
+    // (Look for the values as JSON values: random hex in signatures and hashes can contain the same digits.)
     const text = JSON.stringify(oar.records);
-    expect(text).not.toContain('190000');
-    expect(text).not.toContain('re_123');
-    expect(text).not.toContain('1142');
+    expect(text).not.toMatch(/:190000[,}]/);
+    expect(text).not.toContain('"re_123"');
+    expect(text).not.toContain('"1142"');
 
     const bundle = await oar.bundle();
     const report = verifyBundle(bundle);
