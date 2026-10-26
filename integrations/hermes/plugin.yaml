@@ -1,0 +1,12 @@
+name: oar
+version: "0.2.0"
+description: Signed, verifiable Open Action Records of every approval decision (who or what approved, on which surface, and whether the call then succeeded). Commands and session keys are committed, never stored in clear.
+author: The Open Action Record authors
+homepage: https://github.com/openactionrecord/oar
+license: Apache-2.0
+provides_hooks:
+  - pre_approval_request
+  - post_approval_response
+  - post_tool_call
+pip_dependencies:
+  - open-action-record>=0.2.0

@@ -13,8 +13,8 @@ and values stay in a separate local file (mode 600) so you can disclose them lat
 
 Install and enable:
 
-    pip install open-action-record        # in the Python environment Hermes runs in
-    hermes plugins enable oar
+    hermes plugins install openactionrecord/oar/integrations/hermes --enable
+    # or, managing Hermes's Python yourself:  pip install open-action-record && hermes plugins enable oar
 
 Files (in $HERMES_HOME/oar, default ~/.hermes/oar):
 
