@@ -133,9 +133,9 @@ export async function demo(dir: string, options: { offline?: boolean } = {}): Pr
   line();
 
   line(c.bold('Next:'));
-  line(`  pnpm oar verify ${rel(files.bundle)}     ${c.dim('# the bundle you would share: proves what happened, discloses nothing')}`);
+  line(`  npx @openactionrecord/cli verify ${rel(files.bundle)}     ${c.dim('# the bundle you would share: proves what happened, discloses nothing')}`);
   line(`  open ${rel(files.html)}                              ${c.dim('# the same check, offline in a browser')}`);
-  line(`  ${c.dim('Record your own agent: see examples/quickstart.ts and https://github.com/openactionrecord/oar')}`);
+  line(`  npm install @openactionrecord/core     ${c.dim('# record your own agent: https://github.com/openactionrecord/oar')}`);
   line();
   return refund.status === 'completed' && report.result === 'pass' ? 0 : 1;
 }
