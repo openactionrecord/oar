@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "open-action-record"
-version = "0.1.1"
-description = "Verify Open Action Records: signed proof of what an AI agent's action actually changed, and who approved it."
+version = "0.2.0"
+description = "Write and verify Open Action Records: signed proof of what an AI agent's action actually changed, and who approved it."
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 dependencies = ["cryptography>=42", "asn1crypto>=1.5", "rfc8785>=0.1.4"]
-keywords = ["ai-agents", "audit", "receipts", "verification", "provenance", "open-action-record", "oar"]
+keywords = ["hermes-agent", "ai-agents", "audit", "receipts", "verification", "provenance", "open-action-record", "oar"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
@@ -24,6 +24,9 @@ Specification = "https://github.com/openactionrecord/oar/blob/main/SPEC.md"
 
 [project.scripts]
 oar-verify = "open_action_record.cli:main"
+
+[project.entry-points."hermes_agent.plugins"]
+oar = "open_action_record.hermes"
 
 [tool.setuptools.packages.find]
 where = ["src"]

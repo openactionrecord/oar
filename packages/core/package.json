@@ -1,6 +1,6 @@
 {
   "name": "@openactionrecord/core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Write and verify Open Action Records: signed proof of what an AI agent's action actually changed, and who approved it.",
   "license": "Apache-2.0",
   "type": "module",
