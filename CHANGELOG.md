@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1 (26 October 2026)
+
+- The demo's closing hints now give the `npx` commands that work from npm.
+- First release of the Python package to PyPI.
+
+## 0.1.0 (26 October 2026, npm)
 
 First public release.
 
