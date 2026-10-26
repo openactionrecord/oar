@@ -1,8 +1,8 @@
 name: Playground
 
-# Run by hand until the repository is public (GitHub Pages needs a public repository on the free plan).
-# On launch day, add:  push: { branches: [main] }
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
