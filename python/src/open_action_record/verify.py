@@ -359,7 +359,7 @@ def outcomes(bundle: Any) -> list[str]:
         elif exe:
             result.append("executed_unconfirmed" if exe["result"] == "executed" else "failed")
         elif appr:
-            result.append({"rejected": "rejected", "expired": "expired"}.get(appr["result"], "allowed_not_executed"))
+            result.append({"rejected": "rejected", "expired": "expired"}.get(appr["result"], "approved_not_executed"))
         elif dec and dec["result"] == "denied":
             result.append("denied")
         elif dec and dec["result"] == "held":

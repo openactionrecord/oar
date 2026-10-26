@@ -34,14 +34,15 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -e "python[test]"
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm build
       - run: pnpm test
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - run: pip install -e "python[test]" && pytest python/tests
+      - run: pytest python/tests
       - name: Versions agree
         run: |
           core=$(node -p "require('./packages/core/package.json').version")

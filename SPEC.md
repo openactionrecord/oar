@@ -171,7 +171,7 @@ Inputs: the records, the disclosures given (optional), the checkpoints, the issu
 
 The result is `pass` only if no check fails anywhere. Verifiers SHOULD let users supply keys obtained independently (for example from the published key sets) to rule out a substituted bundle.
 
-**Outcome.** Verifiers SHOULD also report each action's outcome from its records, grouping the records of one action by following `decision_ref` back to its first record: `confirmed`, `not_confirmed`, executed without confirmation, `failed`, held awaiting approval, `denied`, `rejected` or `expired`.
+**Outcome.** Verifiers SHOULD also report each action's outcome from its records, grouping the records of one action by following `decision_ref` back to its first record: `confirmed`, `not_confirmed`, executed without confirmation, `failed`, held awaiting approval, approved without a recorded execution, `denied`, `rejected` or `expired`.
 
 ## 7. Reason codes
 

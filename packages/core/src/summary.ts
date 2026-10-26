@@ -13,6 +13,7 @@ export type Outcome =
   | 'denied'
   | 'rejected'
   | 'expired'
+  | 'approved_not_executed'
   | 'allowed_not_executed';
 
 export const OUTCOME_LABELS: Record<Outcome, string> = {
@@ -24,6 +25,7 @@ export const OUTCOME_LABELS: Record<Outcome, string> = {
   denied: 'Blocked by the rules',
   rejected: 'Rejected by a person',
   expired: 'Approval expired',
+  approved_not_executed: 'Approved; no execution recorded',
   allowed_not_executed: 'Allowed; no execution recorded',
 };
 
@@ -81,7 +83,7 @@ export function summarize(records: readonly OarRecord[], disclosures: readonly D
     let outcome: Outcome;
     if (confirmation) outcome = confirmation.payload.result === 'confirmed' ? 'confirmed' : 'not_confirmed';
     else if (execution) outcome = execution.payload.result === 'executed' ? 'executed_unconfirmed' : 'failed';
-    else if (approval) outcome = approval.payload.result === 'rejected' ? 'rejected' : approval.payload.result === 'expired' ? 'expired' : 'allowed_not_executed';
+    else if (approval) outcome = approval.payload.result === 'rejected' ? 'rejected' : approval.payload.result === 'expired' ? 'expired' : 'approved_not_executed';
     else if (decision?.payload.result === 'denied') outcome = 'denied';
     else if (decision?.payload.result === 'held') outcome = 'awaiting_approval';
     else outcome = 'allowed_not_executed';

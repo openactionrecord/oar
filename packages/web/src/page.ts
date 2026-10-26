@@ -149,6 +149,7 @@ var OUTCOME = {
   denied: ['Blocked by the rules', 'bad'],
   rejected: ['Rejected by a person', 'bad'],
   expired: ['Approval expired', 'bad'],
+  approved_not_executed: ['Approved; no execution recorded', 'wait'],
   allowed_not_executed: ['Allowed; no execution recorded', 'wait']
 };
 var LEVEL = { 'issuer-signed': 'Issuer-signed only', sealed: 'Sealed by a separate service', timestamped: 'Sealed + outside timestamp' };
@@ -166,7 +167,7 @@ function stories(pkg) {
     var exe = last(function (p) { return p.phase === 'execution'; });
     var conf = last(function (p) { return p.phase === 'confirmation'; });
     var o = conf ? (conf.payload.result === 'confirmed' ? 'confirmed' : 'not_confirmed') : exe ? (exe.payload.result === 'executed' ? 'executed_unconfirmed' : 'failed') :
-      appr ? (appr.payload.result === 'approved' ? 'allowed_not_executed' : appr.payload.result) : dec && dec.payload.result === 'denied' ? 'denied' : dec && dec.payload.result === 'held' ? 'awaiting_approval' : 'allowed_not_executed';
+      appr ? (appr.payload.result === 'approved' ? 'approved_not_executed' : appr.payload.result) : dec && dec.payload.result === 'denied' ? 'denied' : dec && dec.payload.result === 'held' ? 'awaiting_approval' : 'allowed_not_executed';
     function disclosed(rec, field) { if (!rec) return undefined; var d = (pkg.disclosures || []).find(function (x) { return x.receiptId === rec.payload.receipt_id && x.field === field; }); return d ? d.value : undefined; }
     return { first: list[0].payload, list: list, outcome: o, before: disclosed(exe, 'state_before'), after: disclosed(exe, 'state_after') };
   });
