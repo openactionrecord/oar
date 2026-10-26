@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['python/src/open_action_record/hermes.py', 'python/tests/hermes_integration.py', '.github/workflows/hermes.yml']
+    paths: ['python/src/open_action_record/hermes.py', 'python/tests/hermes_integration.py', 'integrations/hermes/**', '.github/workflows/hermes.yml']
 
 permissions:
   contents: read
@@ -21,10 +21,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - name: Install Hermes Agent (latest main) and this package
+        # Install from inside the Hermes folder: its pyproject's [tool.uv] overrides are needed to resolve its pins.
         run: |
           git clone --depth 1 https://github.com/NousResearch/hermes-agent "$RUNNER_TEMP/hermes-agent"
           uv venv -p 3.14 "$RUNNER_TEMP/venv"
-          uv pip install --python "$RUNNER_TEMP/venv/bin/python" -e "$RUNNER_TEMP/hermes-agent" -e python
-      - name: Approvals in real Hermes become verifiable records
+          cd "$RUNNER_TEMP/hermes-agent"
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" -e . -e "$GITHUB_WORKSPACE/python"
+      - name: Approvals in real Hermes become verifiable records (pip entry point)
         working-directory: ${{ runner.temp }}/hermes-agent
+        run: "$RUNNER_TEMP/venv/bin/python $GITHUB_WORKSPACE/python/tests/hermes_integration.py"
+      - name: The same, installed as a directory plugin (integrations/hermes)
+        working-directory: ${{ runner.temp }}/hermes-agent
+        env:
+          OAR_PLUGIN_MODE: directory
         run: "$RUNNER_TEMP/venv/bin/python $GITHUB_WORKSPACE/python/tests/hermes_integration.py"

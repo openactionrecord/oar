@@ -83,7 +83,7 @@ verifyBundle(bundle).result;                                      // "pass"
 
 **Python:** `pip install open-action-record`, then the same thing with `Recorder(...).run(...)` (sync or async). See [python/](python).
 
-**Hermes Agent:** `pip install open-action-record && hermes plugins enable oar` records every approval decision (who or what approved, on which surface, and whether the call then succeeded) as verifiable records, without writing commands in clear. See [the plugin](python#hermes-agent-plugin).
+**Hermes Agent:** `hermes plugins install openactionrecord/oar/integrations/hermes --enable` records every approval decision (who or what approved, on which surface, and whether the call then succeeded) as verifiable records, without writing commands in clear. See [integrations/hermes](integrations/hermes).
 
 Every path is recorded: allowed, held, approved, rejected, denied, failed, confirmed and not confirmed. Errors from `execute` are recorded, then re-thrown. Prefer explicit steps? Use `oar.decide()`, `oar.approve()`, `oar.execute()` and `oar.confirm()`.
 
