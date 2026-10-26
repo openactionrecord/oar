@@ -1,0 +1,99 @@
+name: Release
+
+# Publishes @openactionrecord/core and @openactionrecord/cli to npm, and open-action-record to PyPI.
+# Run it from the Actions tab ("Run workflow"), or push a tag like v0.1.0.
+#
+# npm: needs the repository secret NPM_TOKEN (an npm granular access token with read and write access to the
+#      @openactionrecord scope). Packages are published with provenance, so npm shows they were built here.
+# PyPI: uses Trusted Publishing (no token): the PyPI project trusts this workflow and the "pypi" environment.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      npm:
+        description: Publish to npm
+        type: boolean
+        default: true
+      pypi:
+        description: Publish to PyPI
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -e "python[test]" && pytest python/tests
+      - name: Versions agree
+        run: |
+          core=$(node -p "require('./packages/core/package.json').version")
+          cli=$(node -p "require('./packages/cli/package.json').version")
+          py=$(python -c "import tomllib;print(tomllib.load(open('python/pyproject.toml','rb'))['project']['version'])")
+          echo "core $core, cli $cli, python $py"
+          test "$core" = "$cli" && test "$core" = "$py"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then test "v$core" = "${GITHUB_REF_NAME}"; fi
+
+  npm:
+    needs: check
+    if: github.event_name == 'push' || inputs.npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Publish (core first, then the CLI that depends on it)
+        run: |
+          for pkg in core cli; do
+            name=$(node -p "require('./packages/$pkg/package.json').name")
+            version=$(node -p "require('./packages/$pkg/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then echo "$name@$version is already published"; continue; fi
+            (cd packages/$pkg && pnpm publish --access public --provenance --no-git-checks)
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+
+  pypi:
+    needs: check
+    if: github.event_name == 'push' || inputs.pypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install build && python -m build python --outdir dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
