@@ -6,6 +6,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue.svg)](LICENSE)
 [![Spec: CC BY 4.0](https://img.shields.io/badge/spec-CC%20BY%204.0-lightgrey.svg)](SPEC.md)
 [![npm](https://img.shields.io/npm/v/@openactionrecord/core.svg?label=%40openactionrecord%2Fcore)](https://www.npmjs.com/package/@openactionrecord/core)
+[![PyPI](https://img.shields.io/pypi/v/open-action-record.svg?label=open-action-record)](https://pypi.org/project/open-action-record/)
 
 AI agents now refund customers, change orders, delete rows and deploy code. When one gets it wrong, logs tell you a tool was called. They don't tell you **whether a person approved that exact action**, **what it actually changed**, or **whether the system of record agrees**. And they were written by the system you are trying to check.
 
@@ -94,7 +95,7 @@ Runnable examples, all tested in CI (from a clone: `pnpm install && pnpm build`,
 ```bash
 npx @openactionrecord/cli verify evidence.json --cross-check   # reference verifier + independent WebCrypto verifier
 npx @openactionrecord/cli html evidence.json                    # a self-contained page that verifies offline
-pip install ./python && oar-verify evidence.json                # Python (PyPI package coming soon)
+pip install open-action-record && oar-verify evidence.json     # Python
 ```
 
 Pass `--keys` with the key sets the issuer and sealing service publish (at `/.well-known/aar-keys.json`) to rule out a substituted bundle.
