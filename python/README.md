@@ -34,8 +34,9 @@ Every path is recorded: allowed, held, approved, rejected, denied, failed, confi
 Every approval decision in [Hermes Agent](https://github.com/NousResearch/hermes-agent) (dangerous commands, protected writes, MCP elicitations, payments; on the CLI, in messaging gateways, or by smart approval) becomes a signed, chained record: who or what decided, on which surface, and whether the approved call then succeeded. Commands, descriptions and session keys are committed, never written in clear.
 
 ```bash
-pip install open-action-record            # in the environment Hermes runs in
-hermes plugins enable oar
+hermes plugins install openactionrecord/oar/integrations/hermes --enable
+# or, if you manage Hermes's Python environment yourself:
+#   pip install open-action-record && hermes plugins enable oar
 # ... use Hermes ...
 python -m open_action_record.hermes export > approvals.json
 oar-verify approvals.json

@@ -18,6 +18,10 @@ home = Path(tempfile.mkdtemp(prefix="hermes-home-"))
 os.environ["HERMES_HOME"] = str(home)
 os.environ.pop("OAR_HERMES_DIR", None)
 (home / "config.yaml").write_text("plugins:\n  enabled:\n    - oar\n", encoding="utf-8")
+if os.environ.get("OAR_PLUGIN_MODE") == "directory":  # as `hermes plugins install .../integrations/hermes` lays it out
+    import shutil
+
+    shutil.copytree(Path(__file__).resolve().parents[2] / "integrations" / "hermes", home / "plugins" / "oar")
 
 import hermes_cli.plugins as plugins  # noqa: E402
 from tools import approval_context  # noqa: E402
@@ -28,6 +32,8 @@ plugins.discover_plugins(force=True)
 info = [p for p in plugins.get_plugin_manager().list_plugins() if p["name"] == "oar"]
 assert info, "Hermes did not discover the oar plugin"
 print("plugin:", {k: info[0][k] for k in ("name", "source", "enabled", "hooks", "error")})
+if os.environ.get("OAR_PLUGIN_MODE") == "directory":
+    assert info[0]["source"] == "user", info[0]
 assert info[0]["enabled"] and not info[0]["error"], info[0]
 assert info[0]["hooks"] == 3, info[0]
 
