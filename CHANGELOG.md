@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 (26 October 2026)
+
+- **Python writer.** `open-action-record` now writes records too: `Recorder` with `run()` and `run_async()`,
+  step-by-step `decide`/`approve`/`execute`/`confirm`, `LocalSealer`, bundles, and chain continuation across
+  restarts. Records written in Python verify with the TypeScript and browser verifiers (tested in CI).
+- **Hermes Agent plugin.** `pip install open-action-record && hermes plugins enable oar`: every approval decision
+  becomes a signed, chained record, with commands and session keys committed rather than stored. Safe with
+  several Hermes processes. Tested against the latest Hermes weekly.
+- Summaries report "approved; no execution recorded" separately from "allowed".
+
 ## 0.1.1 (26 October 2026)
 
 - The demo's closing hints now give the `npx` commands that work from npm.

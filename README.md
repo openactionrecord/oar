@@ -81,6 +81,10 @@ const bundle = await oar.bundle();                                // discloses n
 verifyBundle(bundle).result;                                      // "pass"
 ```
 
+**Python:** `pip install open-action-record`, then the same thing with `Recorder(...).run(...)` (sync or async). See [python/](python).
+
+**Hermes Agent:** `pip install open-action-record && hermes plugins enable oar` records every approval decision (who or what approved, on which surface, and whether the call then succeeded) as verifiable records, without writing commands in clear. See [the plugin](python#hermes-agent-plugin).
+
 Every path is recorded: allowed, held, approved, rejected, denied, failed, confirmed and not confirmed. Errors from `execute` are recorded, then re-thrown. Prefer explicit steps? Use `oar.decide()`, `oar.approve()`, `oar.execute()` and `oar.confirm()`.
 
 Runnable examples, all tested in CI (from a clone: `pnpm install && pnpm build`, then `npx tsx examples/quickstart.ts`):
@@ -152,14 +156,13 @@ The full format is in **[SPEC.md](SPEC.md)**.
 |---|---|
 | [`@openactionrecord/core`](packages/core) | Write records (`createRecorder`), run a sealing service, verify, summarise. Node.js 20+. |
 | [`@openactionrecord/cli`](packages/cli) | `oar demo`, `oar verify`, `oar inspect`, `oar html`, `oar keygen` |
-| [`open-action-record`](python) | Python verifier and `oar-verify` |
+| [`open-action-record`](python) | Python: write and verify records, `oar-verify`, and the Hermes Agent plugin |
 | [Playground](packages/web) | A static page that verifies bundles in the browser |
 | [Test vectors](vectors) | Every verifier must pass them. They include records written by the first implementation. |
 
 ## Roadmap
 
-- Python writer (record actions from Python agents)
-- Ready-made adapters: MCP SDK middleware, OpenAI Agents SDK, LangChain, Vercel AI SDK, Claude Code hooks
+- More ready-made adapters: MCP SDK middleware, OpenAI Agents SDK, LangChain, Vercel AI SDK, Claude Code hooks (Hermes Agent is done)
 - Outcome readers for Stripe, Shopify and Postgres
 - COSE encoding and a SCITT registration profile
 - Publishing checkpoints to a public transparency log

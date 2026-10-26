@@ -1,0 +1,30 @@
+name: Hermes plugin
+
+# Runs the Hermes plugin against the latest Hermes Agent from GitHub: real plugin discovery, real approval code.
+# Weekly, and on changes to the plugin, so a Hermes change that breaks it shows up quickly.
+
+on:
+  schedule:
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['python/src/open_action_record/hermes.py', 'python/tests/hermes_integration.py', '.github/workflows/hermes.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  hermes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install Hermes Agent (latest main) and this package
+        run: |
+          git clone --depth 1 https://github.com/NousResearch/hermes-agent "$RUNNER_TEMP/hermes-agent"
+          uv venv -p 3.14 "$RUNNER_TEMP/venv"
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" -e "$RUNNER_TEMP/hermes-agent" -e python
+      - name: Approvals in real Hermes become verifiable records
+        working-directory: ${{ runner.temp }}/hermes-agent
+        run: "$RUNNER_TEMP/venv/bin/python $GITHUB_WORKSPACE/python/tests/hermes_integration.py"
