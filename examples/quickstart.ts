@@ -46,4 +46,4 @@ for (const action of summarize(bundle.records, bundle.disclosures, report)) {
   console.log(`${action.type} → ${action.target}: ${action.outcomeText}`);
   for (const step of action.steps) console.log(`  ${step.phase.padEnd(12)} ${step.text}`);
 }
-console.log('\nWrote evidence.json. Check it with: npx @openactionrecord/cli verify evidence.json');
+console.log('\nWrote evidence.json. Check it with: pnpm oar verify evidence.json (from the repository root)');

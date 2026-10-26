@@ -16,10 +16,14 @@ Open Action Record is an open format and toolkit for signed, verifiable records 
 - **Checkable by anyone, offline.** Ed25519 signatures, per-agent hash chains, an optional separate sealing service, and optional RFC 3161 timestamps from an outside authority. Three independent verifiers: TypeScript, browser (WebCrypto) and Python.
 - **Adds to what you have.** Already sign tool calls with another receipt format? Point an OAR record at it with `external_ref` and add the approval and outcome evidence it lacks.
 
+> **Pre-release.** The npm and PyPI packages are being published. Until then, run everything from source: it takes a minute and needs Node.js 20+ and [pnpm](https://pnpm.io).
+
 ## See it in one minute
 
 ```bash
-npx @openactionrecord/cli demo
+git clone https://github.com/openactionrecord/oar && cd oar
+pnpm install && pnpm build
+pnpm demo
 ```
 
 No account, no setup. An AI support agent at an online store takes three actions; OAR records them, the bundle verifies, an edit to it is caught, and a false success shows up:
@@ -52,9 +56,7 @@ Or open the **[playground](https://openactionrecord.github.io/oar/)**: paste a b
 
 ## Record your own agent
 
-```bash
-npm install @openactionrecord/core
-```
+Inside the cloned repository, run the examples with `npx tsx examples/quickstart.ts`. (Once published: `npm install @openactionrecord/core`.)
 
 ```ts
 import { createRecorder, generateSigningKey, verifyBundle } from '@openactionrecord/core';
@@ -91,9 +93,9 @@ Runnable examples, all tested in CI:
 ## Verify a bundle
 
 ```bash
-npx @openactionrecord/cli verify evidence.json --cross-check    # reference verifier + independent WebCrypto verifier
-npx @openactionrecord/cli html evidence.json                    # a self-contained page that verifies offline
-pip install open-action-record && oar-verify evidence.json      # Python
+pnpm oar verify evidence.json --cross-check   # reference verifier + independent WebCrypto verifier
+pnpm oar html evidence.json                  # a self-contained page that verifies offline
+pip install ./python && oar-verify evidence.json   # Python
 ```
 
 Pass `--keys` with the key sets the issuer and sealing service publish (at `/.well-known/aar-keys.json`) to rule out a substituted bundle.
