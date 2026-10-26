@@ -1,0 +1,13 @@
+{
+  "name": "Open Action Record",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" }
+  },
+  "postCreateCommand": "corepack enable && pnpm install --frozen-lockfile && pnpm build && pip install -e ./python",
+  "postAttachCommand": "echo '\\nTry it:  pnpm demo        (then: pnpm oar verify oar-demo/evidence.json)\\nExamples: npx tsx examples/quickstart.ts\\n'",
+  "customizations": {
+    "codespaces": { "openFiles": ["README.md", "examples/quickstart.ts"] },
+    "vscode": { "extensions": ["dbaeumer.vscode-eslint"] }
+  }
+}

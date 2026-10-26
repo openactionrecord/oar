@@ -24,6 +24,8 @@ Open Action Record is an open format and toolkit for signed, verifiable records 
 npx @openactionrecord/cli demo
 ```
 
+Or try it in your browser, with nothing installed: [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/openactionrecord/oar?quickstart=1) (then run `pnpm demo`).
+
 No account, no setup. An AI support agent at an online store takes three actions; OAR records them, the bundle verifies, an edit to it is caught, and a false success shows up:
 
 ```text
