@@ -8,56 +8,62 @@
 [![npm](https://img.shields.io/npm/v/@openactionrecord/core.svg?label=%40openactionrecord%2Fcore)](https://www.npmjs.com/package/@openactionrecord/core)
 [![PyPI](https://img.shields.io/pypi/v/open-action-record.svg?label=open-action-record)](https://pypi.org/project/open-action-record/)
 
-<p align="center"><img src="docs/oar-demo.gif" alt="The one-minute OAR demo in a terminal: a $1,900 refund held for approval and confirmed, an 80% discount blocked, a $45 refund that reported success but changed nothing recorded as NOT confirmed, and an edited record failing verification" width="860"></p>
+<p align="center"><img src="docs/oar-demo-database.gif" alt="The one-minute OAR database demo in a terminal: a routine cleanup confirmed, deleting the customers table held and rejected by a person, deleting the backups blocked, a migration that reported applied but added nothing recorded as NOT confirmed, records timestamped by DigiCert, and an edited record failing verification" width="860"></p>
 
-**Try it in your browser, nothing to install:** [openactionrecord.github.io/oar](https://openactionrecord.github.io/oar/) loads signed records from the database demo; press a tamper button and watch verification fail.
+**Get started**
 
-AI agents now refund customers, change orders, delete rows and deploy code. When one gets it wrong, logs tell you a tool was called. They don't tell you **whether a person approved that exact action**, **what it actually changed**, or **whether the system of record agrees**. And they were written by the system you are trying to check.
+| | | |
+|---|---|---|
+| **See it, nothing to install** | [Open the playground](https://openactionrecord.github.io/oar/) | Signed records from the database demo, verified in your browser. Press a tamper button and watch verification fail. |
+| **Run it (1 minute)** | `npx @openactionrecord/cli demo --database` | Needs Node.js 20+. No account, no setup. |
+| **Record your own agent (5 minutes)** | [Quickstart](docs/QUICKSTART.md) | A runnable example with a real database, then how to point it at your system and your agent's tools. |
+
+AI agents now delete rows, deploy code, change customer accounts and issue refunds. When one gets it wrong, logs tell you a tool was called. They don't tell you **whether a person approved that exact action**, **what it actually changed**, or **whether the system of record agrees**. And they were written by the system you are trying to check.
 
 Open Action Record is an open format and toolkit for signed, verifiable records of agent actions:
 
 - **Approval of the exact action.** When a rule holds an action, the record shows who approved it, bound to a commitment of that one action (this refund, this amount). An approval can't be reused for anything else.
 - **What actually changed.** The execution record commits to the affected state before and after. A separate confirmation reads the system of record back. An agent that reports success without effect shows up as **NOT confirmed**.
 - **Safe to share.** Amounts, parameters, IDs and state are salted commitments. Share a bundle with an auditor, an insurer or a customer without revealing anything, then disclose field by field.
-- **Checkable by anyone, offline.** Ed25519 signatures, per-agent hash chains, an optional separate sealing service, and optional RFC 3161 timestamps from an outside authority. Three independent verifiers: TypeScript, browser (WebCrypto) and Python.
+- **Verifiable offline, with open tools.** Ed25519 signatures, per-agent hash chains, an optional separate sealing service, and optional RFC 3161 timestamps from an outside authority. Three independent verifiers: TypeScript, browser (WebCrypto) and Python.
 - **Adds to what you have.** Already sign tool calls with another receipt format? Point an OAR record at it with `external_ref` and add the approval and outcome evidence it lacks.
 
 ## See it in one minute
 
 ```bash
-npx @openactionrecord/cli demo              # an AI support agent at an online store
 npx @openactionrecord/cli demo --database   # an AI operations agent on a production database
+npx @openactionrecord/cli demo              # an AI support agent at an online store
 ```
 
-Or try it in your browser, with nothing installed: [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/openactionrecord/oar?quickstart=1) (then run `pnpm demo`).
+No Node.js? Use the [playground](https://openactionrecord.github.io/oar/), or [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/openactionrecord/oar?quickstart=1) and run `pnpm demo --database`.
 
-No account, no setup. An AI support agent at an online store takes three actions; OAR records them, the bundle verifies, an edit to it is caught, and a false success shows up:
+The database demo: an AI operations agent takes four actions. OAR records each one, an outside authority timestamps them, the bundle verifies, an edit to it is caught, and a false success shows up:
 
 ```text
-1. A customer's $1,900 order arrived damaged. The agent refunds it.
-   held: over the $1,250 approval limit → Jordan, the support lead, approves
-   ✔ refunded, and the payment system confirms it
-2. A customer asks for 80% off. The agent tries to create the code.
-   ✘ blocked: over the 20% maximum (recorded, not executed)
-3. A $45 refund. The payment API answers "succeeded"… but a bug means nothing was refunded.
-   ✘ the agent reported success; the read-back shows no refund. Recorded as NOT confirmed.
+1. The agent deletes 120 expired sessions, a routine cleanup.
+   ✔ deleted, and the database confirms it
+2. The agent tries to delete the customers table.
+   held: deleting a table needs a person → Maya, the database owner, rejects it
+   ✘ rejected: the table was never deleted (recorded)
+3. The agent tries to delete the database backups.
+   ✘ blocked: no rule allows deleting backups (recorded, not executed)
+4. A schema migration. The migration tool answers "applied"… but a bug means the column was never added.
+   ✘ the agent reported success; the read-back shows no new column. Recorded as NOT confirmed.
 
-✔ All 8 records passed verification.  [Sealed by a separate service]
+   ✔ timestamped by DigiCert SHA256 RSA4096 Timestamp Responder 2026 1
 
-✔ refund → payments  Done, and confirmed in the system of record
-    decision     Held for approval by policy:store-rules-v3 (over_approval_limit)
-    approval     Approved by approver:jordan (button)
+✔ All 9 records passed verification.  [Sealed and timestamped by an outside authority]
+
+✘ run_migration → database  Executed, but the system of record does NOT show it
+    decision     Allowed by policy:database-rules-v2 (approved_migration)
     execution    Executed; state before and after recorded
-    confirmation Confirmed in the system of record
-
-✘ refund → payments  Executed, but the system of record does NOT show it
     confirmation NOT confirmed in the system of record (outcome_missing)
 
-Now someone edits the record to pretend the $1,900 refund never needed approval:
+Now someone edits the record to pretend deleting the customers table never needed a person:
 ✘ Verification failed: Issuer signature, Seal, Checkpoint coverage, Chain check failed.
 ```
 
-Or open the **[playground](https://openactionrecord.github.io/oar/)**: paste a bundle, press a tamper button, watch it fail. Nothing leaves your browser.
+The store demo tells the same story with a $1,900 refund held for approval, an 80% discount blocked, and a $45 refund the payment API called "succeeded" that never happened. Every run writes `oar-demo/evidence.json` and an offline `verify.html` you can open in a browser.
 
 ## Record your own agent
 
