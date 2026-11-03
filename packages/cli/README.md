@@ -4,6 +4,7 @@
 
 ```bash
 npx @openactionrecord/cli demo                          # a one-minute demo; writes ./oar-demo
+npx @openactionrecord/cli demo --database               # the same demo on a production database
 npx @openactionrecord/cli verify evidence.json          # verify, and show what each action did
 npx @openactionrecord/cli verify evidence.json --cross-check --keys published-keys.json
 npx @openactionrecord/cli html evidence.json            # a page that verifies the bundle offline

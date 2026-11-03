@@ -21,7 +21,8 @@ Open Action Record is an open format and toolkit for signed, verifiable records 
 ## See it in one minute
 
 ```bash
-npx @openactionrecord/cli demo
+npx @openactionrecord/cli demo              # an AI support agent at an online store
+npx @openactionrecord/cli demo --database   # an AI operations agent on a production database
 ```
 
 Or try it in your browser, with nothing installed: [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/openactionrecord/oar?quickstart=1) (then run `pnpm demo`).
