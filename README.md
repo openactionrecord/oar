@@ -61,6 +61,8 @@ Or open the **[playground](https://openactionrecord.github.io/oar/)**: paste a b
 
 ## Record your own agent
 
+**New here? Follow the [5-minute quickstart](docs/QUICKSTART.md):** a runnable database example with a real SQLite database, then how to point it at your own system and your agent's tools.
+
 ```bash
 npm install @openactionrecord/core
 ```
