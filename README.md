@@ -10,6 +10,8 @@
 
 <p align="center"><img src="docs/oar-demo.gif" alt="The one-minute OAR demo in a terminal: a $1,900 refund held for approval and confirmed, an 80% discount blocked, a $45 refund that reported success but changed nothing recorded as NOT confirmed, and an edited record failing verification" width="860"></p>
 
+**Try it in your browser, nothing to install:** [openactionrecord.github.io/oar](https://openactionrecord.github.io/oar/) loads signed records from the database demo; press a tamper button and watch verification fail.
+
 AI agents now refund customers, change orders, delete rows and deploy code. When one gets it wrong, logs tell you a tool was called. They don't tell you **whether a person approved that exact action**, **what it actually changed**, or **whether the system of record agrees**. And they were written by the system you are trying to check.
 
 Open Action Record is an open format and toolkit for signed, verifiable records of agent actions:
