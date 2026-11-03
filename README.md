@@ -8,6 +8,8 @@
 [![npm](https://img.shields.io/npm/v/@openactionrecord/core.svg?label=%40openactionrecord%2Fcore)](https://www.npmjs.com/package/@openactionrecord/core)
 [![PyPI](https://img.shields.io/pypi/v/open-action-record.svg?label=open-action-record)](https://pypi.org/project/open-action-record/)
 
+<p align="center"><img src="docs/oar-demo.gif" alt="The one-minute OAR demo in a terminal: a $1,900 refund held for approval and confirmed, an 80% discount blocked, a $45 refund that reported success but changed nothing recorded as NOT confirmed, and an edited record failing verification" width="860"></p>
+
 AI agents now refund customers, change orders, delete rows and deploy code. When one gets it wrong, logs tell you a tool was called. They don't tell you **whether a person approved that exact action**, **what it actually changed**, or **whether the system of record agrees**. And they were written by the system you are trying to check.
 
 Open Action Record is an open format and toolkit for signed, verifiable records of agent actions:
@@ -169,6 +171,8 @@ The full format is in **[SPEC.md](SPEC.md)**.
 - Publishing checkpoints to a public transparency log
 
 Want one of these sooner, or something else? [Open an issue](https://github.com/openactionrecord/oar/issues).
+
+If OAR is useful to you, a star helps other developers find it.
 
 ## FAQ
 
