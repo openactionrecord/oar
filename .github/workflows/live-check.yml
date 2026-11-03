@@ -1,0 +1,53 @@
+name: Live check
+
+# Runs the published packages the way a new developer would, with internet access, so the DigiCert
+# RFC 3161 timestamp is exercised for real: the CLI demos, the database quickstart and the edge cases.
+# Weekly, and on demand from the Actions tab.
+
+on:
+  schedule:
+    - cron: '17 13 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: CLI demos timestamp with DigiCert and verify as Timestamped
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/live && cd /tmp/live
+          npx -y @openactionrecord/cli@latest demo db --database | tee db.txt
+          npx -y @openactionrecord/cli@latest demo store | tee store.txt
+          grep -q "timestamped by" db.txt
+          grep -q "timestamped by" store.txt
+          npx -y @openactionrecord/cli@latest verify db/evidence.json --cross-check | tee verify.txt
+          grep -q "Timestamped" verify.txt
+
+      - name: Database quickstart and edge cases, in a fresh project
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/fresh && cp examples/quickstart-database.mjs scripts/published-edge-cases.mjs /tmp/fresh/ && cd /tmp/fresh
+          npm init -y >/dev/null && npm pkg set type=module && npm install @openactionrecord/core@latest
+          node quickstart-database.mjs | tee quickstart.txt
+          grep -q "Timestamped by" quickstart.txt
+          grep -q "^PASS:" quickstart.txt
+          npx -y @openactionrecord/cli@latest verify evidence.json --cross-check | grep -q "Timestamped"
+          node published-edge-cases.mjs
+
+      - name: The Python verifier agrees
+        run: |
+          pip install open-action-record
+          oar-verify /tmp/fresh/evidence.json
+          oar-verify /tmp/live/db/evidence.json
