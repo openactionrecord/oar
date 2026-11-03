@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 (2 November 2026)
+
+- **Database demo.** `npx @openactionrecord/cli demo --database`: an AI operations agent on a production database.
+  A routine cleanup runs and is confirmed, deleting a table is held and rejected by a person, deleting the backups is
+  blocked, and a migration the tool reports as "applied" but that never added its column is recorded as NOT confirmed.
+- README: the one-minute demo as an animated GIF.
+- Versions of the TypeScript and Python packages move together; no change to the record format or the Python package.
+
 ## 0.2.0 (26 October 2026)
 
 - **Python writer.** `open-action-record` now writes records too: `Recorder` with `run()` and `run_async()`,
