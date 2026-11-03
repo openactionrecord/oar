@@ -10,4 +10,4 @@ __all__ = [
     "build_bundle", "commitment_for", "generate_signing_key", "load_or_create_key", "outcomes", "parse_bundle",
     "public_keys", "verify_bundle",
 ]
-__version__ = "0.2.0"
+__version__ = "0.3.0"
