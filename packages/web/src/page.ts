@@ -5,7 +5,7 @@ import { STANDALONE_VERIFIER_JS } from '@openactionrecord/core/standalone';
 
 const REPO = 'https://github.com/openactionrecord/oar';
 
-export function playgroundHtml(samples: { valid: unknown; issuerSigned: unknown }): string {
+export function playgroundHtml(samples: { database: unknown; valid: unknown; issuerSigned: unknown }): string {
   const json = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c');
   return `<!doctype html>
 <html lang="en">
@@ -74,7 +74,7 @@ footer{border-top:1px solid var(--line);padding:20px 0 40px;color:var(--muted);f
   <h1>Your agent says it did it.<br>OAR proves what actually changed, and who approved it.</h1>
   <p class="lede">An open record format for AI agent actions: the decision, <b>the person who approved this exact action</b>, <b>the state before and after</b>, and <b>a confirmation read back from the system of record</b>. Signed, chained, optionally sealed and timestamped, with no personal data in clear. This page verifies records <b>entirely in your browser</b>; nothing is uploaded.</p>
   <div class="cta">
-    <span class="cmd">npx @openactionrecord/cli demo</span>
+    <span class="cmd">npx @openactionrecord/cli demo --database</span>
     <span class="cmd">npm i @openactionrecord/core</span>
     <a class="btn" href="${REPO}">GitHub</a>
     <a class="btn" href="${REPO}/blob/main/SPEC.md">Specification</a>
@@ -85,13 +85,14 @@ footer{border-top:1px solid var(--line);padding:20px 0 40px;color:var(--muted);f
   <section class="panel" aria-labelledby="in-h">
     <h2 id="in-h">Bundle</h2>
     <div class="row">
-      <button class="btn primary" data-sample="valid">Sample: three agent actions</button>
+      <button class="btn primary" data-sample="database">Sample: a production database</button>
+      <button class="btn" data-sample="valid">Sample: an online store</button>
       <button class="btn" data-sample="issuerSigned">Sample: no sealing service</button>
       <label class="btn">Open a file<input id="file" class="sr" type="file" accept=".json,application/json"></label>
     </div>
     <div class="row">
       <button class="btn danger" data-tamper="decision">Tamper: erase the need for approval</button>
-      <button class="btn danger" data-tamper="amount">Tamper: edit a disclosed amount</button>
+      <button class="btn danger" data-tamper="amount">Tamper: edit a disclosed number</button>
       <button class="btn danger" data-tamper="delete">Tamper: delete a record</button>
     </div>
     <label class="sr" for="json">Bundle JSON</label>
@@ -137,7 +138,7 @@ await writeFile('evidence.json', JSON.stringify(await oar.bundle()));   // verif
 
 <script>
 ${STANDALONE_VERIFIER_JS}
-var SAMPLES = { valid: ${json(samples.valid)}, issuerSigned: ${json(samples.issuerSigned)} };
+var SAMPLES = { database: ${json(samples.database)}, valid: ${json(samples.valid)}, issuerSigned: ${json(samples.issuerSigned)} };
 var $ = function (id) { return document.getElementById(id); };
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 var OUTCOME = {
@@ -213,7 +214,7 @@ function load(obj) { $('json').value = JSON.stringify(obj, null, 2); check(); }
 document.querySelectorAll('[data-sample]').forEach(function (b) { b.addEventListener('click', function () { load(SAMPLES[b.dataset.sample]); }); });
 document.querySelectorAll('[data-tamper]').forEach(function (b) {
   b.addEventListener('click', function () {
-    var pkg; try { pkg = JSON.parse($('json').value); } catch (e) { pkg = JSON.parse(JSON.stringify(SAMPLES.valid)); }
+    var pkg; try { pkg = JSON.parse($('json').value); } catch (e) { pkg = JSON.parse(JSON.stringify(SAMPLES.database)); }
     var recs = pkg.records || pkg.receipts || [];
     if (b.dataset.tamper === 'decision') { var h = recs.find(function (r) { return r.payload.result === 'held'; }); if (h) { h.payload.result = 'allowed'; h.payload.reasons = ['within_limits']; } }
     if (b.dataset.tamper === 'amount') { var d = (pkg.disclosures || []).find(function (x) { return x.field === 'state_after'; }); if (d && d.value) { for (var k in d.value) if (typeof d.value[k] === 'number' && k !== 'totalCents') { d.value[k] = Math.round(d.value[k] / 10); break; } } }
@@ -225,7 +226,7 @@ var timer; $('json').addEventListener('input', function () { clearTimeout(timer)
 $('file').addEventListener('change', function (e) { var f = e.target.files[0]; if (f) f.text().then(function (t) { $('json').value = t; check(); }); });
 document.addEventListener('dragover', function (e) { e.preventDefault(); });
 document.addEventListener('drop', function (e) { e.preventDefault(); var f = e.dataTransfer.files[0]; if (f) f.text().then(function (t) { $('json').value = t; check(); }); });
-load(SAMPLES.valid);
+load(SAMPLES.database);
 </script>
 </body>
 </html>
