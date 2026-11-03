@@ -47,6 +47,21 @@ describe('oar CLI', () => {
     expect(html).not.toMatch(/<script[^>]+src=/);
   }, 60_000);
 
+  it('database demo: cleanup confirmed, table deletion rejected, backups blocked, false migration caught', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oar-demo-db-'));
+    const demo = await oar(['demo', dir, '--database', '--offline']);
+    expect(demo.code).toBe(0);
+    expect(demo.out).toContain('Done, and confirmed in the system of record');
+    expect(demo.out).toContain('Rejected by a person');
+    expect(demo.out).toContain('Blocked by the rules');
+    expect(demo.out).toContain('Executed, but the system of record does NOT show it');
+    expect(demo.out).toContain('Verification failed');
+
+    const ok = await oar(['verify', join(dir, 'evidence.json'), '--cross-check']);
+    expect(ok.code).toBe(0);
+    expect(ok.out).toContain('All 9 records passed verification.');
+  }, 60_000);
+
   it('verify against substituted keys fails', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oar-keys-'));
     await oar(['demo', dir, '--offline']);
