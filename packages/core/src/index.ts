@@ -17,6 +17,17 @@ export {
 } from './crypto/keys.js';
 export * from './record.js';
 export {
+  bindingDigest,
+  bindingChallenge,
+  challengeDigest,
+  checkApproval,
+  APPROVAL_PURPOSE,
+  type ApprovalBinding,
+  type ApprovalEvidence,
+  type BindingInput,
+  type BoundDecision,
+} from './approval.js';
+export {
   verify,
   CHECK_LABELS,
   LEVEL_LABELS,
@@ -39,6 +50,8 @@ export {
   type DecideInput,
   type ActionHandle,
   type ApproveInput,
+  type ApprovalRequest,
+  type ApprovalRequestInput,
   type ExecuteInput,
   type ConfirmInput,
   type RunInput,

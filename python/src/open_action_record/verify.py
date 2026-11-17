@@ -11,7 +11,7 @@ from typing import Any
 from .canonical import digest, signature_ok
 from .timestamp import TimestampResult, anchor_digest, verify_timestamp_token
 
-CHECKS = ("issuer_signature", "seal", "chain", "checkpoint", "disclosures", "timestamp")
+CHECKS = ("issuer_signature", "seal", "chain", "checkpoint", "disclosures", "timestamp", "approval")
 LABELS = {
     "issuer_signature": "Issuer signature",
     "seal": "Seal",
@@ -19,6 +19,7 @@ LABELS = {
     "checkpoint": "Checkpoint coverage",
     "disclosures": "Disclosures",
     "timestamp": "Outside timestamp",
+    "approval": "Approval binding",
 }
 LEVELS = ("issuer-signed", "sealed", "timestamped")
 LEVEL_LABELS = {
@@ -110,7 +111,7 @@ def verify_bundle(bundle: Any, *, keys: dict | None = None, tsa_roots: list[dict
             agent_id=str(p.get("agent_id", "unknown")),
             phase=str(p.get("phase", "")),
             outcome=str(p.get("result", "")),
-            checks={"issuer_signature": "fail", "seal": "fail", "chain": "not_checked", "checkpoint": "not_checked", "disclosures": "not_checked", "timestamp": "not_checked"},
+            checks={"issuer_signature": "fail", "seal": "fail", "chain": "not_checked", "checkpoint": "not_checked", "disclosures": "not_checked", "timestamp": "not_checked", "approval": "not_checked"},
         )
         sig = record.get("issuer_sig") or {}
         if sig.get("alg") == "EdDSA" and signature_ok(issuer_keys, sig.get("kid", ""), p, sig.get("sig", "")):
@@ -131,6 +132,10 @@ def verify_bundle(bundle: Any, *, keys: dict | None = None, tsa_roots: list[dict
         else:
             report.checks["seal"] = "not_checked"
             report.messages.append("Issuer-signed only: not countersigned by a separate sealing service.")
+        problems = check_approval(p)
+        if problems is not None:
+            report.checks["approval"] = "fail" if problems else "pass"
+            report.messages += problems
         entries.append(_Entry(record, report, seal_valid))
 
     _check_chains(entries, partial)
@@ -301,6 +306,55 @@ def _check_timestamps(entries, checkpoints, sealer_keys, partial, tsa_roots):
     return any(not r.ok for _cp, r in results), messages, stamp
 
 
+def _is_digest(value: Any) -> bool:
+    return isinstance(value, str) and len(value) == 71 and value.startswith("sha256:") and all(c in "0123456789abcdef" for c in value[7:])
+
+
+def binding_digest(action_id: str, instance_commitment: str, nonce: str, display_commitment: str | None = None, decision: str | None = None) -> str:
+    """The approval binding (SPEC.md section 4.3): what the approver's device or the outside service confirms."""
+    value: dict[str, Any] = {
+        "v": 2,
+        "purpose": "oar.approval",
+        "action_id": action_id,
+        "instance_commitment": instance_commitment,
+        "display_commitment": display_commitment,
+        "nonce": nonce,
+    }
+    if decision:
+        value["decision"] = decision
+    return digest(value)
+
+
+def check_approval(p: dict) -> list[str] | None:
+    """Problems with one record's approval binding and outside evidence; None when there is nothing to check."""
+    a = p.get("approval")
+    if not isinstance(a, dict) or (a.get("binding") is None and a.get("method") != "external"):
+        return None
+    problems: list[str] = []
+    if a.get("method") == "external":
+        ev = a.get("evidence")
+        if not isinstance(ev, dict) or not isinstance(ev.get("provider"), str) or not ev.get("provider") or not isinstance(ev.get("format"), str) or not ev.get("format") or not _is_digest(ev.get("digest")):
+            problems.append("An approval by an outside service must name the provider and format and carry the digest of its proof.")
+        if not a.get("binding"):
+            problems.append("An approval by an outside service must carry the binding it was asked to confirm.")
+    b = a.get("binding")
+    if b:
+        nonce = b.get("nonce") if isinstance(b, dict) else None
+        if not isinstance(b, dict) or b.get("v") != 2 or not isinstance(nonce, str) or len(nonce) != 64 or not all(c in "0123456789abcdef" for c in nonce) or not _is_digest(b.get("digest")):
+            problems.append("The approval binding is malformed.")
+        elif not isinstance(p.get("decision_ref"), str):
+            problems.append("The approval binding names no held action (decision_ref is missing).")
+        else:
+            expected = binding_digest(p["decision_ref"], p.get("instance_commitment"), nonce, a.get("display_commitment") or None, b.get("decision"))
+            if expected != b.get("digest"):
+                problems.append("The approval binding does not match this action, what the approver was shown, or its nonce.")
+            if b.get("decision") == "approve" and p.get("result") != "approved":
+                problems.append("The approver signed an approval, but the record says otherwise.")
+            if b.get("decision") == "reject" and p.get("result") != "rejected":
+                problems.append("The approver signed a rejection, but the record says otherwise.")
+    return problems
+
+
 def _check_disclosures(entries, disclosures) -> list[str]:
     messages: list[str] = []
     by_id = {e.report.receipt_id: e for e in entries}
@@ -309,7 +363,11 @@ def _check_disclosures(entries, disclosures) -> list[str]:
         if e is None:
             messages.append(f"A disclosure refers to a record that is not included ({d.get('receiptId')}).")
             continue
-        commitment = e.record["payload"].get(FIELDS.get(d.get("field"), ""), None)
+        payload = e.record["payload"]
+        if d.get("field") == "display":
+            commitment = (payload.get("approval") or {}).get("display_commitment")
+        else:
+            commitment = payload.get(FIELDS.get(d.get("field"), ""), None)
         salt = d.get("salt", "")
         ok = (
             isinstance(commitment, str)

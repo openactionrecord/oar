@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
+import { bindingChallenge, bindingDigest, type ApprovalBinding, type ApprovalEvidence, type BoundDecision } from './approval.js';
 import { commitmentFor } from './crypto/commitment.js';
-import { canonicalDigest, isSha256Digest } from './crypto/hash.js';
+import { canonicalDigest, isSha256Digest, sha256Hex } from './crypto/hash.js';
 import { toJwk, type SigningKey } from './crypto/keys.js';
 import { BUNDLE_FORMAT, type Bundle, type BundlePurpose } from './bundle.js';
 import {
@@ -91,6 +92,25 @@ export interface ApproveInput {
   method?: Exclude<ApprovalMethod, 'standing_mandate'>;
   /** Passkey approvals: the WebAuthn assertion (JSON). Its digest is recorded; keep the assertion to disclose it. */
   assertion?: unknown;
+  /**
+   * Approvals by an outside service (method "external"): who checked the approver, the proof's format, and the
+   * proof itself (its digest is recorded; keep the proof to disclose it) or its "sha256:<hex>" digest.
+   */
+  evidence?: { provider: string; format: string; proof?: string | Uint8Array; digest?: string; id?: string };
+}
+
+export interface ApprovalRequestInput {
+  /** What the approver is shown, for example `{ text: 'Pay $48,000 to payee P-1002', amountCents: 4800000, payee: 'P-1002' }`. Committed. */
+  display?: unknown;
+  /** For a passkey: the decision this challenge is for. Omit when an outside service returns the decision. */
+  decision?: BoundDecision;
+}
+
+export interface ApprovalRequest {
+  /** "sha256:<hex>": send this to the outside approval service, which should return it in its proof. */
+  binding: string;
+  /** The same 32 bytes, base64url: the WebAuthn challenge for a passkey. */
+  challenge: string;
 }
 
 export interface ExecuteInput {
@@ -163,7 +183,10 @@ export class Recorder {
   private readonly policyPrincipal: string;
   private readonly written: OarRecord[] = [];
   private readonly secrets: DisclosureInput[] = [];
-  private readonly actions = new Map<string, { handle: ActionHandle; principal: string; targetRef?: string; external?: ExternalRef }>();
+  private readonly actions = new Map<
+    string,
+    { handle: ActionHandle; principal: string; targetRef?: string; external?: ExternalRef; request?: { approvalId: string; display?: string; binding: ApprovalBinding }[] }
+  >();
   private queue: Promise<unknown> = Promise.resolve();
   private lastIssuedAt = 0;
 
@@ -212,6 +235,31 @@ export class Recorder {
     });
   }
 
+  /**
+   * Prepares the value a held action's approver confirms: built from the action, what the approver is shown and a
+   * fresh nonce (SPEC.md section 4.3). Send `binding` to an outside approval service, or use `challenge` as the
+   * WebAuthn challenge. Then call `approve`; the approval record carries the binding.
+   */
+  requestApproval(action: ActionHandle, input: ApprovalRequestInput = {}): Promise<ApprovalRequest> {
+    return this.serial(async () => {
+      const state = this.state(action);
+      if (state.handle.status !== 'held') throw new Error(`Only a held action can be sent for approval (this one is ${state.handle.status}).`);
+      const approvalId = state.request?.[0]?.approvalId ?? this.newId();
+      const display = input.display === undefined ? undefined : this.commit(approvalId, 'display', input.display);
+      const nonce = this.randomSalt();
+      const digest = bindingDigest({
+        actionId: state.handle.lastRecordId,
+        instanceCommitment: state.handle.instanceCommitment,
+        ...(display ? { displayCommitment: display } : {}),
+        nonce,
+        ...(input.decision ? { decision: input.decision } : {}),
+      });
+      const binding: ApprovalBinding = { v: 2, nonce, ...(input.decision ? { decision: input.decision } : {}), digest };
+      state.request = [...(state.request ?? []), { approvalId, ...(display ? { display } : {}), binding }];
+      return { binding: digest, challenge: bindingChallenge(digest) };
+    });
+  }
+
   /** Records a person's approval or rejection of a held action. */
   approve(action: ActionHandle, input: ApproveInput): Promise<OarRecord> {
     return this.serial(async () => {
@@ -219,8 +267,14 @@ export class Recorder {
       if (state.handle.status !== 'held') throw new Error(`Only a held action can be approved or rejected (this one is ${state.handle.status}).`);
       if (!input.approver || /@/.test(input.approver)) throw new TypeError('approver: a stable reference such as "jordan", not an email address');
       const approved = input.approved ?? true;
-      const method = input.method ?? (input.assertion ? 'passkey' : 'button');
-      const id = this.newId();
+      const method = input.method ?? (input.evidence ? 'external' : input.assertion ? 'passkey' : 'button');
+      const decision: BoundDecision = approved ? 'approve' : 'reject';
+      const requests = state.request ?? [];
+      const request = [...requests].reverse().find((r) => r.binding.decision === decision) ?? [...requests].reverse().find((r) => !r.binding.decision);
+      if (method === 'external' && !request) throw new Error('An approval by an outside service needs requestApproval() first, so the service confirms this exact action.');
+      const evidence = method === 'external' ? toEvidence(input.evidence) : undefined;
+      const id = request?.approvalId ?? this.newId();
+      if (request) this.dropUnusedDisplays(requests, request);
       const principal = `approver:${input.approver}`;
       const record = await this.write({
         receipt_id: id,
@@ -233,6 +287,9 @@ export class Recorder {
           approver: input.approver,
           at: this.stamp(),
           ...(input.assertion !== undefined ? { assertion_digest: canonicalDigest(input.assertion) } : {}),
+          ...(request?.display ? { display_commitment: request.display } : {}),
+          ...(request ? { binding: request.binding } : {}),
+          ...(evidence ? { evidence } : {}),
         },
         result: approved ? 'approved' : 'rejected',
         reasons: [approved ? 'approved_by_person' : 'rejected_by_person'],
@@ -242,6 +299,7 @@ export class Recorder {
       state.principal = principal;
       state.handle.lastRecordId = id;
       state.handle.status = approved ? 'approved' : 'rejected';
+      delete state.request;
       return record;
     });
   }
@@ -408,6 +466,16 @@ export class Recorder {
     return new Date(t).toISOString();
   }
 
+  /** Several requests for one approval share its record id; keep only the display opening of the one used. */
+  private dropUnusedDisplays(requests: { approvalId: string; display?: string }[], used: { display?: string }): void {
+    const unused = new Set(requests.map((r) => r.display).filter((d): d is string => d !== undefined && d !== used.display));
+    if (!unused.size) return;
+    for (let i = this.secrets.length - 1; i >= 0; i--) {
+      const s = this.secrets[i]!;
+      if (s.field === 'display' && unused.has(commitmentFor(s.value, s.salt))) this.secrets.splice(i, 1);
+    }
+  }
+
   private commit(receiptId: string, field: DisclosureField, value: unknown): string {
     const salt = this.randomSalt();
     const commitment = commitmentFor(value, salt);
@@ -461,6 +529,13 @@ function validateAction(input: ActionInput): void {
 function checkExternal(ref: ExternalRef): ExternalRef {
   if (!ref.format || !isSha256Digest(ref.digest)) throw new TypeError('external: expected { format, digest: "sha256:<hex>" }');
   return { format: ref.format, digest: ref.digest, ...(ref.id ? { id: ref.id } : {}) };
+}
+
+function toEvidence(input: ApproveInput['evidence']): ApprovalEvidence {
+  if (!input?.provider || !input.format) throw new TypeError('evidence: expected { provider, format, proof or digest }');
+  const digest = input.digest ?? (input.proof !== undefined ? `sha256:${sha256Hex(input.proof)}` : undefined);
+  if (!isSha256Digest(digest)) throw new TypeError('evidence: give the proof, or its digest as "sha256:<hex>"');
+  return { provider: input.provider, format: input.format, digest, ...(input.id ? { id: input.id } : {}) };
 }
 
 async function safely<T>(fn: () => T | Promise<T>): Promise<T | undefined> {

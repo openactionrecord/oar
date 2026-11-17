@@ -1,5 +1,6 @@
 import { canonicalDigest } from './crypto/hash.js';
 import { findPublicKey, signCanonical, verifyCanonical, type Jwks, type SigningKey } from './crypto/keys.js';
+import type { ApprovalBinding, ApprovalEvidence } from './approval.js';
 
 // Open Action Record (OAR), version 0.3. See SPEC.md.
 //
@@ -32,7 +33,7 @@ export type RecordResult =
   | 'confirmed'
   | 'not_confirmed';
 
-export type ApprovalMethod = 'standing_mandate' | 'button' | 'passkey';
+export type ApprovalMethod = 'standing_mandate' | 'button' | 'passkey' | 'external';
 
 /** A receipt in another format that this OAR record adds approval and outcome evidence to. */
 export interface ExternalRef {
@@ -66,6 +67,12 @@ export interface Payload {
     at: string;
     /** Passkey approvals: "sha256:<hex>" of the WebAuthn assertion, kept in full by the issuer. */
     assertion_digest?: string;
+    /** Commitment to what the approver was shown (the action, amount and recipient as displayed). */
+    display_commitment?: string;
+    /** The value the approver's device or the outside service was asked to confirm (SPEC.md section 4.3). */
+    binding?: ApprovalBinding;
+    /** Approvals by an outside service: its proof, by digest. */
+    evidence?: ApprovalEvidence;
   };
   /** Commitment to limit usage at decision time (for example today's total before and after). */
   consumption_commitment?: string;

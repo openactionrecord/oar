@@ -32,7 +32,7 @@ export interface Bundle {
   keys: VerificationKeys;
 }
 
-const FIELDS: readonly DisclosureField[] = ['instance', 'consumption', 'target_ref', 'state_before', 'state_after'];
+const FIELDS: readonly DisclosureField[] = ['instance', 'consumption', 'target_ref', 'state_before', 'state_after', 'display'];
 
 export class BundleError extends Error {
   override name = 'BundleError';

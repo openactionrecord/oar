@@ -1,3 +1,4 @@
+import { checkApproval } from './approval.js';
 import { verifyCommitment } from './crypto/commitment.js';
 import type { Jwks } from './crypto/keys.js';
 import {
@@ -20,7 +21,7 @@ import { TSA_ROOTS, type TsaRoot } from './timestamp/tsa-roots.js';
 // Records may be issuer-signed only (no sealing service). They still verify, at a lower evidence level, unless
 // `requireSeal` is set. Every report states the level it reached, so a stripped seal cannot pass unnoticed.
 
-export type CheckName = 'issuer_signature' | 'seal' | 'chain' | 'checkpoint' | 'disclosures' | 'timestamp';
+export type CheckName = 'issuer_signature' | 'seal' | 'chain' | 'checkpoint' | 'disclosures' | 'timestamp' | 'approval';
 export type CheckResult = 'pass' | 'fail' | 'not_checked';
 
 export const CHECK_LABELS: Record<CheckName, string> = {
@@ -30,9 +31,10 @@ export const CHECK_LABELS: Record<CheckName, string> = {
   checkpoint: 'Checkpoint coverage',
   disclosures: 'Disclosures',
   timestamp: 'Outside timestamp',
+  approval: 'Approval binding',
 };
 
-export type DisclosureField = 'instance' | 'consumption' | 'target_ref' | 'state_before' | 'state_after';
+export type DisclosureField = 'instance' | 'consumption' | 'target_ref' | 'state_before' | 'state_after' | 'display';
 
 export interface DisclosureInput {
   /** The receipt's `receipt_id` ("urn:uuid:..."). */
@@ -99,13 +101,19 @@ export interface VerificationReport {
   messages: string[];
 }
 
-const COMMITMENT_FIELD: Record<DisclosureField, keyof Payload> = {
+const COMMITMENT_FIELD: Record<Exclude<DisclosureField, 'display'>, keyof Payload> = {
   instance: 'instance_commitment',
   consumption: 'consumption_commitment',
   target_ref: 'target_ref_commitment',
   state_before: 'state_before_commitment',
   state_after: 'state_after_commitment',
 };
+
+/** The commitment a disclosure opens. What the approver was shown sits inside `approval`. */
+function commitmentOf(payload: Payload, field: DisclosureField): unknown {
+  if (field === 'display') return payload.approval?.display_commitment;
+  return COMMITMENT_FIELD[field] ? payload[COMMITMENT_FIELD[field]] : undefined;
+}
 
 interface Entry {
   envelope: OarRecord;
@@ -128,7 +136,7 @@ export function verify(
       receiptId: String(envelope.payload?.receipt_id ?? 'unknown'),
       agentId: String(envelope.payload?.agent_id ?? 'unknown'),
       ...(envelope.seal ? { seq: envelope.seal.seq } : {}),
-      checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked' },
+      checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked', approval: 'not_checked' },
       result: 'pass',
       level: 'issuer-signed',
       messages: [],
@@ -152,6 +160,12 @@ export function verify(
       }
     } else {
       report.messages.push('The seal does not match this record. It was changed after sealing or sealed with an unknown key.');
+    }
+
+    const approvalProblems = envelope.payload ? checkApproval(envelope.payload) : undefined;
+    if (approvalProblems) {
+      report.checks.approval = approvalProblems.length ? 'fail' : 'pass';
+      report.messages.push(...approvalProblems);
     }
 
     return { envelope, report, sealValid };
@@ -440,7 +454,7 @@ function checkDisclosures(entries: Entry[], disclosures: readonly DisclosureInpu
       continue;
     }
     const { report, envelope } = entry;
-    const commitment = envelope.payload[COMMITMENT_FIELD[disclosure.field]];
+    const commitment = commitmentOf(envelope.payload, disclosure.field);
     const ok = typeof commitment === 'string' && verifyCommitment(commitment, disclosure.salt, disclosure.value);
     if (ok) {
       if (report.checks.disclosures !== 'fail') report.checks.disclosures = 'pass';
