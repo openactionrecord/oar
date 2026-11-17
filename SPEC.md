@@ -177,6 +177,21 @@ The result is `pass` only if no check fails anywhere. Verifiers SHOULD let users
 
 Reason codes are short, stable strings in `snake_case`, for example `within_limits`, `needs_approval`, `over_approval_limit`, `over_maximum`, `daily_budget_exceeded`, `approved_by_person`, `rejected_by_person`, `executed`, `execution_failed`, `outcome_confirmed`, `outcome_missing`, `outcome_mismatch`. Implementations MAY add codes; verifiers MUST treat unknown codes as opaque.
 
+**Common codes.** Where one of these fits, writers SHOULD use it rather than a code of their own, so that records from different systems read the same way:
+
+| Code | Meaning |
+|---|---|
+| `new_payee` | The payment goes to a payee this organisation has not paid before. |
+| `payee_details_changed` | The action changes where money is paid: a payee's or account's bank or payout details. |
+| `identity_change_requires_approval` | The action changes who controls an account: an email address, phone number or login method. |
+| `velocity_exceeded` | Too many actions of this kind in a short period, by this agent or for one customer. |
+| `outside_working_hours` | The action was requested outside the hours the rules allow. |
+| `agents_paused` | An emergency stop was in force, so no agent action could run. |
+| `system_unavailable` | A check, the sealing service or an approval service could not be reached, so the action did not run (fail closed). |
+| `rules_changed_since_decision` | The rules changed between the decision and the execution, so the action was checked again. |
+| `override_by_person` | A person allowed an action that the rules alone would have denied. |
+| `outcome_differs_from_approval` | What changed in the system of record differs from what the person approved. |
+
 ## 8. Bundles
 
 A bundle is one JSON object:
@@ -192,6 +207,9 @@ A bundle is one JSON object:
 | `disclosures` | Disclosures to open selected commitments. MAY be empty: the bundle still proves integrity, completeness and outcome without revealing values. |
 | `checkpoints` | The sealer's signed checkpoints, with `anchors` where present. |
 | `keys` | `{ "issuer": JWKS, "sealer"?: JWKS }` |
+| `retention` | Optional: `{ "keep_until": <RFC 3339 date>, "basis"?: <short text, for example "AI Act Article 19, six months"> }`. A statement by whoever made the bundle about how long it should be kept (section 11.1). Not covered by any signature; verifiers MAY show it and MUST NOT fail a bundle because of it. |
+
+Verifiers MUST ignore bundle fields they do not know.
 
 ## 9. Conformance
 
@@ -211,11 +229,23 @@ An implementation conforms when it reaches the expected result on every case in 
 
 Records hold commitments, not values. Fresh 32-byte salts make commitments to small value spaces (amounts) unguessable. Disclosures SHOULD be shared only with parties that need them. Approver references SHOULD be stable identifiers, not email addresses. WebAuthn assertions MAY contain authenticator data and SHOULD be disclosed only to verifiers who need them.
 
+### 11.1 Retention and erasure
+
+Records are append-only: deleting or editing one breaks the chain and the checkpoints, and verification reports it. Rules that require keeping records (for example, logs of high-risk AI systems for at least six months under the EU AI Act, Article 19) and rules that require erasing personal data on request can both apply to the same records. OAR separates the two:
+
+- **Keep the records.** Records, seals and checkpoints hold digests and commitments, never values in clear (section 4.1). They SHOULD be kept for the longest period that applies.
+- **Erase the openings.** The salt and value behind a commitment are kept apart from the records (as disclosures, or in the issuer's own store). To erase a value, the issuer deletes every copy of its salt and value. The commitment can then never be opened, and every check in section 6 still passes: check 5 covers only the disclosures given. The test vector `erased-values.json` shows this.
+- **Keep salts and values apart from records,** so that each can be deleted without touching the records. Issuers SHOULD record where each salt is kept.
+- A bundle MAY state how long it should be kept (`retention`, section 8).
+
+Whether a commitment whose opening still exists is personal data depends on who holds the opening and on the law that applies. In the EU, the Court of Justice held in *EDPS v SRB* (C-413/23 P, 4 September 2025) that pseudonymised data is not personal data for a recipient who cannot reasonably re-identify the person, but stays personal data for a controller who can. Operators SHOULD confirm their approach with their own counsel.
+
 ## 12. Relationship to other work
 
 OAR is a domain profile for agent actions. Its sealing service, signed statements and checkpoints follow the shape of the IETF SCITT architecture (RFC 9943): signed statements registered with a transparency service that returns receipts. The approval and outcome evidence (sections 4.2 to 4.4) is designed to be added to other agent receipt formats rather than replace them. A COSE encoding and a SCITT registration profile are planned.
 
 ## 13. Changes
 
+- **Since 0.3 (November 2026, draft)**: common reason codes (section 7); optional bundle field `retention` and the rule that verifiers ignore unknown bundle fields (section 8); retention and erasure (section 11.1). Records are unchanged and still carry `aar_version` `"0.3"`. A mapping to rules in the EU, the US and Canada is in `docs/REGULATORY-MAPPING.md`.
 - **0.3 (October 2026, first public draft)**: `state_before_commitment` and `state_after_commitment`; the `confirmation` phase; outside timestamps on checkpoints; `external_ref`; the issuer-signed profile and evidence levels; bundle format `oar-bundle/0.1`.
 - **0.2-mvp**: decision, approval and execution records; commitments; chain; sealing service and checkpoints; evidence packages (`aar-evidence/0.1`).
