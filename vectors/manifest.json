@@ -65,6 +65,34 @@
       }
     },
     {
+      "file": "retention.json",
+      "description": "refund-lifecycle with a retention statement and an unknown bundle field. Both are ignored by verification.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "timestamped",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    },
+    {
+      "file": "erased-values.json",
+      "description": "refund-lifecycle after erasure: the disclosures of the state before and after are deleted. The records still verify.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "timestamped",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    },
+    {
       "file": "issuer-signed.json",
       "description": "A store credit recorded without a sealing service: issuer-signed only. Nothing disclosed.",
       "options": {

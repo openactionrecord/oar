@@ -121,6 +121,17 @@ async function main(): Promise<void> {
   removed.records.splice(1, 1);
   add({ file: 'removed-record.json', description: 'refund-lifecycle with the approval record removed.', bundle: removed, expect: { result: 'fail', failedChecks: ['chain', 'checkpoint'] } });
 
+  // Section 8: a retention statement, and a bundle field no verifier knows, change nothing.
+  const retained = structuredClone(lifecycle) as Bundle & Record<string, unknown>;
+  retained.retention = { keep_until: '2027-05-25T00:00:00Z', basis: 'AI Act Article 19, six months' };
+  retained.x_future_field = { note: 'verifiers ignore bundle fields they do not know' };
+  add({ file: 'retention.json', description: 'refund-lifecycle with a retention statement and an unknown bundle field. Both are ignored by verification.', bundle: retained, expect: { result: 'pass', level: 'timestamped', outcomes: ['confirmed'] } });
+
+  // Section 11.1: erasing the openings of personal values leaves every record verifiable.
+  const erased = structuredClone(lifecycle);
+  erased.disclosures = erased.disclosures.filter((d) => d.field !== 'state_before' && d.field !== 'state_after');
+  add({ file: 'erased-values.json', description: 'refund-lifecycle after erasure: the disclosures of the state before and after are deleted. The records still verify.', bundle: erased, expect: { result: 'pass', level: 'timestamped', outcomes: ['confirmed'] } });
+
   {
     const { oar } = recorder('issuer-signed', false);
     await oar.run({ type: 'store_credit', target: 'store', params: { customer: 'c-77', cents: 12_500 }, idempotencyKey: 'credit-1', execute: () => ({ id: 'cr_1' }), targetRef: (r) => r.id, confirm: () => true });
