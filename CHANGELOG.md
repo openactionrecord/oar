@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 (17 November 2026)
 
 - **Approval binding, version 2** (SPEC section 4.3.1): the approval record carries the value the approver
   confirmed, built from the held action, the exact action instance, what the approver was shown and a nonce.
