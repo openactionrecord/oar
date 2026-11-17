@@ -128,7 +128,7 @@ function step(r: OarRecord, verified: boolean | undefined): ActionStep {
       if (p.enforced === false) text += ', observe mode: not enforced';
       break;
     case 'approval':
-      text = `${p.result === 'approved' ? 'Approved' : p.result === 'rejected' ? 'Rejected' : 'Expired'}${p.approval?.approver ? ` by approver:${p.approval.approver}` : ''}${p.approval?.method ? ` (${p.approval.method})` : ''}`;
+      text = `${p.result === 'approved' ? 'Approved' : p.result === 'rejected' ? 'Rejected' : 'Expired'}${p.approval?.approver ? ` by approver:${p.approval.approver}` : ''}${p.approval?.method ? ` (${p.approval.method === 'external' && p.approval.evidence?.provider ? `checked by ${p.approval.evidence.provider}` : p.approval.method})` : ''}`;
       break;
     case 'execution':
       text = p.result === 'executed'

@@ -176,13 +176,13 @@ function stories(pkg) {
 
 function stepText(p) {
   var why = (p.reasons || []).length ? ' (' + p.reasons.join(', ') + ')' : '';
-  if (p.phase === 'decision' && ['approved', 'rejected', 'expired'].indexOf(p.result) >= 0) return ['approval', (p.result === 'approved' ? 'Approved' : p.result === 'rejected' ? 'Rejected' : 'Expired') + (p.approval && p.approval.approver ? ' by ' + p.approval.approver : '') + (p.approval && p.approval.method ? ' (' + p.approval.method + ')' : '')];
+  if (p.phase === 'decision' && ['approved', 'rejected', 'expired'].indexOf(p.result) >= 0) return ['approval', (p.result === 'approved' ? 'Approved' : p.result === 'rejected' ? 'Rejected' : 'Expired') + (p.approval && p.approval.approver ? ' by ' + p.approval.approver : '') + (p.approval && p.approval.method ? ' (' + (p.approval.method === 'external' && p.approval.evidence ? 'checked by ' + p.approval.evidence.provider : p.approval.method) + ')' : '')];
   if (p.phase === 'decision') return ['decision', (p.result === 'allowed' ? 'Allowed by ' : p.result === 'held' ? 'Held for approval by ' : 'Blocked by ') + p.principal + why];
   if (p.phase === 'execution') return ['execution', p.result === 'executed' ? 'Executed' + (p.state_before_commitment && p.state_after_commitment ? '; state before and after recorded' : '') : 'Execution failed' + why];
   return ['confirmation', p.result === 'confirmed' ? 'Confirmed in the system of record' : 'NOT confirmed in the system of record' + why];
 }
 
-var CHECKS = [['issuer_signature', 'Signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures']];
+var CHECKS = [['issuer_signature', 'Signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures'], ['approval', 'Approval']];
 var LABEL = { pass: 'pass', fail: 'FAIL', not_checked: '–' };
 
 async function check() {

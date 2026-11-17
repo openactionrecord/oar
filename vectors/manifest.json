@@ -148,6 +148,33 @@
           "confirmed"
         ]
       }
+    },
+    {
+      "file": "approval-external.json",
+      "description": "A $48,000 wire held over the limit and approved through an outside service (a SIM check). The approval binding covers the action and what the approver was shown; the proof is recorded by digest. All values disclosed.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "sealed",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    },
+    {
+      "file": "approval-flipped.json",
+      "description": "An approver signed a rejection with a passkey; the issuer recorded and re-signed it as approved. Only the approval binding check fails.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "approval"
+        ]
+      }
     }
   ]
 }

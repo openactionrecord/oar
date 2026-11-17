@@ -15,7 +15,7 @@ type SubtleCrypto = webcrypto.SubtleCrypto;
 
 export const STANDALONE_VERIFIER_JS = `var OAR_TSA_ROOTS = ${JSON.stringify(TSA_ROOTS)};\n` + String.raw`async function oarVerifyBundle(pkg, subtle, opts) {
   var enc = new TextEncoder();
-  var LABELS = { issuer_signature: 'Issuer signature', seal: 'Seal', chain: 'Chain', checkpoint: 'Checkpoint coverage', disclosures: 'Disclosures', timestamp: 'Outside timestamp' };
+  var LABELS = { issuer_signature: 'Issuer signature', seal: 'Seal', chain: 'Chain', checkpoint: 'Checkpoint coverage', disclosures: 'Disclosures', timestamp: 'Outside timestamp', approval: 'Approval binding' };
   var FIELDS = { instance: 'instance_commitment', consumption: 'consumption_commitment', target_ref: 'target_ref_commitment', state_before: 'state_before_commitment', state_after: 'state_after_commitment' };
   function jcs(v) {
     if (v === null || typeof v !== 'object') {
@@ -53,7 +53,7 @@ export const STANDALONE_VERIFIER_JS = `var OAR_TSA_ROOTS = ${JSON.stringify(TSA_
   var entries = [];
   for (var envelope of pkg.records || pkg.receipts || []) {
     var p = envelope.payload || {};
-    var r = { receiptId: String(p.receipt_id), agentId: String(p.agent_id), phase: p.phase, type: p.action && p.action.type, result: 'pass', level: 'issuer-signed', outcome: p.result, checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked' }, messages: [] };
+    var r = { receiptId: String(p.receipt_id), agentId: String(p.agent_id), phase: p.phase, type: p.action && p.action.type, result: 'pass', level: 'issuer-signed', outcome: p.result, checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked', approval: 'not_checked' }, messages: [] };
     var sig = envelope.issuer_sig || {};
     if (sig.alg === 'EdDSA' && (await sigOk(keys.issuer, sig.kid, p, sig.sig))) r.checks.issuer_signature = 'pass';
     else r.messages.push('The issuer signature does not match this record.');
@@ -258,10 +258,37 @@ export const STANDALONE_VERIFIER_JS = `var OAR_TSA_ROOTS = ${JSON.stringify(TSA_
   for (var d of pkg.disclosures || []) {
     var target = byId[d.receiptId];
     if (!target) { messages.push('A disclosure refers to a record that is not included.'); continue; }
-    var commitment = target.envelope.payload[FIELDS[d.field]];
+    var tp = target.envelope.payload;
+    var commitment = d.field === 'display' ? (tp.approval && tp.approval.display_commitment) : FIELDS[d.field] ? tp[FIELDS[d.field]] : undefined;
     var good = typeof commitment === 'string' && /^[0-9a-f]{64}$/.test(d.salt) && commitment === (await digest({ salt: d.salt, value: d.value }));
     if (good) { if (target.report.checks.disclosures !== 'fail') target.report.checks.disclosures = 'pass'; }
     else { target.report.checks.disclosures = 'fail'; target.report.messages.push('The disclosed ' + String(d.field).replace('_', ' ') + ' details do not match the record.'); }
+  }
+
+  // Approval binding: the value the approver's device or the outside service confirmed must come from this action.
+  for (var ae of entries) {
+    var ap = ae.envelope.payload || {}, appr = ap.approval;
+    if (!appr || (appr.binding === undefined && appr.method !== 'external')) continue;
+    var probs = [];
+    if (appr.method === 'external') {
+      var ev = appr.evidence;
+      if (!ev || typeof ev.provider !== 'string' || !ev.provider || typeof ev.format !== 'string' || !ev.format || !/^sha256:[0-9a-f]{64}$/.test(String(ev.digest))) probs.push('An approval by an outside service must name the provider and format and carry the digest of its proof.');
+      if (!appr.binding) probs.push('An approval by an outside service must carry the binding it was asked to confirm.');
+    }
+    var bd = appr.binding;
+    if (bd) {
+      if (bd.v !== 2 || !/^[0-9a-f]{64}$/.test(String(bd.nonce)) || !/^sha256:[0-9a-f]{64}$/.test(String(bd.digest))) probs.push('The approval binding is malformed.');
+      else if (typeof ap.decision_ref !== 'string') probs.push('The approval binding names no held action (decision_ref is missing).');
+      else {
+        var input = { v: 2, purpose: 'oar.approval', action_id: ap.decision_ref, instance_commitment: ap.instance_commitment, display_commitment: appr.display_commitment || null, nonce: bd.nonce };
+        if (bd.decision) input.decision = bd.decision;
+        if ((await digest(input)) !== bd.digest) probs.push('The approval binding does not match this action, what the approver was shown, or its nonce.');
+        if (bd.decision === 'approve' && ap.result !== 'approved') probs.push('The approver signed an approval, but the record says otherwise.');
+        if (bd.decision === 'reject' && ap.result !== 'rejected') probs.push('The approver signed a rejection, but the record says otherwise.');
+      }
+    }
+    ae.report.checks.approval = probs.length ? 'fail' : 'pass';
+    probs.forEach(function (m) { ae.report.messages.push(m); });
   }
 
   var failedChecks = [];
@@ -334,7 +361,7 @@ table{border-collapse:collapse;width:100%;margin-top:12px} th,td{border-bottom:1
 ${STANDALONE_VERIFIER_JS}
 var EMBEDDED = ${embedded};
 var LABEL = { pass: 'pass', fail: 'FAIL', not_checked: 'not checked' };
-var CHECKS = [['issuer_signature', 'Issuer signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures']];
+var CHECKS = [['issuer_signature', 'Issuer signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures'], ['approval', 'Approval']];
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function fp(set) { return ((set && set.keys) || []).map(function (k) { return esc(k.kid) + ' (' + esc(String(k.x).slice(0, 16)) + '…)'; }).join(', '); }
 async function show(pkg) {
