@@ -9,6 +9,7 @@ import {
   createLocalSealer,
   verifyTimestampToken,
   createRecorder,
+  signRecord,
   summarize,
   verifyBundle,
   type Bundle,
@@ -153,6 +154,34 @@ async function main(): Promise<void> {
     const digest = `sha256:${createHash('sha256').update(other).digest('hex')}`;
     await oar.run({ type: 'refund', target: 'payments', params: { amountCents: 2_000 }, idempotencyKey: 'ext-1', external: { format: 'acta', digest, id: 'acta-rcpt-42' }, execute: () => 'ok', confirm: () => true });
     add({ file: 'external-ref.json', description: 'OAR approval and outcome evidence added to a receipt in another format (external_ref with the digest of its bytes).', bundle: await oar.bundle(), expect: { result: 'pass', level: 'sealed', outcomes: ['confirmed'] } });
+  }
+
+  {
+    // Section 4.3: a payment held over the limit, approved through an outside service (a SIM check), bound to
+    // the action and to what the approver was shown.
+    const { oar } = recorder('approval-external', true);
+    const action = await oar.decide({ type: 'wire_transfer', target: 'core-banking', params: { payee: 'P-1002', amountCents: 4_800_000 }, idempotencyKey: 'wire-1', result: 'held', reasons: ['over_approval_limit'] });
+    const request = await oar.requestApproval(action, { display: { text: 'Pay $48,000.00 to payee P-1002', amountCents: 4_800_000, payee: 'P-1002' } });
+    const proof = JSON.stringify({ result: 'approved', binding: request.binding, ref: 'chk-0001' });
+    await oar.approve(action, { approver: 'treasury-lead', evidence: { provider: 'sim-check', format: 'provider-json', proof, id: 'chk-0001' } });
+    await oar.execute(action, { targetRef: 'wire-77' });
+    await oar.confirm(action, { confirmed: true });
+    add({ file: 'approval-external.json', description: 'A $48,000 wire held over the limit and approved through an outside service (a SIM check). The approval binding covers the action and what the approver was shown; the proof is recorded by digest. All values disclosed.', bundle: await oar.bundle({ disclose: 'all' }), expect: { result: 'pass', level: 'sealed', outcomes: ['confirmed'] } });
+  }
+
+  {
+    // The issuer records "approved" although the approver's passkey signed a rejection, and re-signs the record.
+    // Signatures pass; only the approval check catches it.
+    const { oar } = recorder('approval-flipped', false);
+    const action = await oar.decide({ type: 'change_payout_details', target: 'core-banking', params: { account: 'A-31' }, idempotencyKey: 'payout-1', result: 'held', reasons: ['payee_details_changed'] });
+    await oar.requestApproval(action, { decision: 'reject' });
+    await oar.approve(action, { approver: 'ops-lead', approved: false, assertion: { placeholder: 'a WebAuthn assertion over the reject challenge' } });
+    const bundle = await oar.bundle();
+    const last = bundle.records[bundle.records.length - 1]!;
+    last.payload.result = 'approved';
+    last.payload.reasons = ['approved_by_person'];
+    bundle.records[bundle.records.length - 1] = signRecord(last.payload, ISSUER);
+    add({ file: 'approval-flipped.json', description: 'An approver signed a rejection with a passkey; the issuer recorded and re-signed it as approved. Only the approval binding check fails.', bundle, expect: { result: 'fail', failedChecks: ['approval'] } });
   }
 
   // Check every expectation before writing anything.

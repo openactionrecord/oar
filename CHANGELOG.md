@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Approval binding, version 2** (SPEC section 4.3.1): the approval record carries the value the approver
+  confirmed, built from the held action, the exact action instance, what the approver was shown and a nonce.
+  `requestApproval()` (TypeScript) and `request_approval()` (Python) prepare it; a passkey uses it as its challenge.
+- **Approvals by an outside service** (`method: "external"`): a bank app, a SIM check or a digital identity wallet
+  confirms the approver; the record carries the binding and the digest of the service's proof.
+- **Seventh verifier check, approval binding**, in all three verifiers. It fails a binding made for another
+  action, a changed display, or a signed rejection recorded as approved. Test vectors `approval-external.json`
+  and `approval-flipped.json`.
 - **Rules mapping.** `docs/REGULATORY-MAPPING.md`: how OAR records line up with rules in the EU (AI Act, payment
   rules, GDPR), the US (New York DFS, NIST) and Canada (OSFI E-23), with what is not covered yet and the proposals
   that would cover it.

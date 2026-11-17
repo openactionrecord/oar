@@ -22,7 +22,7 @@ export function line(text = ''): void {
   process.stdout.write(`${text}\n`);
 }
 
-const CHECK_ORDER = ['issuer_signature', 'seal', 'chain', 'checkpoint', 'timestamp', 'disclosures'] as const;
+const CHECK_ORDER = ['issuer_signature', 'seal', 'chain', 'checkpoint', 'timestamp', 'disclosures', 'approval'] as const;
 const CHECK_SHORT: Record<(typeof CHECK_ORDER)[number], string> = {
   issuer_signature: 'signature',
   seal: 'seal',
@@ -30,6 +30,7 @@ const CHECK_SHORT: Record<(typeof CHECK_ORDER)[number], string> = {
   checkpoint: 'checkpoint',
   timestamp: 'timestamp',
   disclosures: 'disclosures',
+  approval: 'approval',
 };
 
 /** The verification headline and, per record, which checks passed. */

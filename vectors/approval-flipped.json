@@ -1,0 +1,101 @@
+{
+  "format": "oar-bundle/0.1",
+  "generated_at": "2026-10-25T14:00:03.000Z",
+  "org": {
+    "id": "example-store",
+    "name": "Example Store (test vectors)"
+  },
+  "scope": {
+    "from": "2026-10-25T14:00:01.000Z",
+    "to": "2026-10-25T14:00:02.000Z",
+    "complete": true
+  },
+  "records": [
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:0cb233dd-e16a-4449-8b52-eac3474f1258",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "change_payout_details",
+          "target": "core-banking"
+        },
+        "instance_commitment": "sha256:4c140f9cceb58b643228dcc0ef33cd5134d8c929e5bbbf44f918ce4c02e4ee55",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "result": "held",
+        "reasons": [
+          "payee_details_changed"
+        ],
+        "enforced": true,
+        "issued_at": "2026-10-25T14:00:01.000Z"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "481c2b7e0da3ef5f70a0a682c5aa610c504a40ac0f1b9cf9ecd2d29ebda1a8bc2aab11f199a5f7d52393870b90055050afe2e89c7130443da84143bc6cba3f0e"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:983a7a4b-455a-47eb-812e-a6225a861dc6",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "change_payout_details",
+          "target": "core-banking"
+        },
+        "instance_commitment": "sha256:4c140f9cceb58b643228dcc0ef33cd5134d8c929e5bbbf44f918ce4c02e4ee55",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "approver:ops-lead",
+        "approval": {
+          "method": "passkey",
+          "approver": "ops-lead",
+          "at": "2026-10-25T14:00:02.000Z",
+          "assertion_digest": "sha256:6c9a7831833c76ed126a524c77f492cd9d1108f3003c1f79b9647331656a4f9a",
+          "binding": {
+            "v": 2,
+            "nonce": "2eb4fecd7c8ec77858730934aa20e9e02adc6c0c8008e130c64719053e4144d1",
+            "decision": "reject",
+            "digest": "sha256:5ae22050fe545fa06e3ea09e45a58adf3329f33da5c2159de01c45a1a07ae069"
+          }
+        },
+        "result": "approved",
+        "reasons": [
+          "approved_by_person"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:0cb233dd-e16a-4449-8b52-eac3474f1258",
+        "issued_at": "2026-10-25T14:00:02.000Z",
+        "prev_receipt_hash": "sha256:cd40ce6b16879cf8d4432e95513148c09bd9b9af7164be3afe816588525c614a"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "2ed1456f44ca21d4fd5fc0d292395d2c5536b359e70439e3c0caa55cc4a2860752a043af429138d7185a51c2bfdf043be5528c5c63e6f4e0e33f33cb5516de06"
+      }
+    }
+  ],
+  "disclosures": [],
+  "checkpoints": [],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+          "kid": "oar-test-issuer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  }
+}

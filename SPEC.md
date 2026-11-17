@@ -73,7 +73,7 @@ OAR does not define how agents are built or how rules are written. It records wh
 | `instance_commitment` | yes | Commitment to the exact action instance: its type, parameters and idempotency key. A writer MAY reuse the action's commitment on each of its records or commit afresh (new salt) on each; records of one action are linked by `decision_ref`, not by this value. |
 | `authorization_ref` | yes | `D(rules)`: the version of the rules that decided. |
 | `principal` | yes | Who decided: `"policy:<id>"`, or `"approver:<ref>"` for a person. |
-| `approval` | no | `{ "method": "standing_mandate" \| "button" \| "passkey", "approver"?, "at", "assertion_digest"? }` (section 4.3) |
+| `approval` | no | `{ "method": "standing_mandate" \| "button" \| "passkey" \| "external", "approver"?, "at", "assertion_digest"?, "display_commitment"?, "binding"?, "evidence"? }` (section 4.3) |
 | `consumption_commitment` | no | Commitment to limit usage at decision time (for example, money used today before and after). |
 | `result` | yes | Decision: `allowed`, `held`, `denied`. Approval: `approved`, `rejected`, `expired`. Execution: `executed`, `failed`. Confirmation: `confirmed`, `not_confirmed`. |
 | `reasons` | yes | Reason codes (section 7). |
@@ -118,6 +118,32 @@ challenge = base64url(SHA-256(JCS({
 
 The challenge MUST be single-use and short-lived. The issuer MUST verify the assertion (origin, relying party, user verification, signature counter) before recording the decision, MUST keep the full assertion so it can be disclosed, and records `assertion_digest = D(assertion as JSON)`. A verifier given the assertion, the approver's credential public key and the nonce can recompute the challenge and check that the approver's authenticator signed this decision for this action instance.
 
+#### 4.3.1 Approval binding (version 2)
+
+Version 2 records the value the approver confirmed inside the approval record, so verifiers can check it, and adds what the approver was shown. Payment rules ask for this: under PSD2's strong customer authentication (Delegated Regulation 2018/389, Article 5), the payer is made aware of the amount and the payee, and any change to either invalidates the authentication.
+
+- **What the approver was shown.** The issuer MAY commit to the text and values displayed to the approver (for example `{ "text": "Pay $48,000.00 to payee P-1002", "amountCents": 4800000, "payee": "P-1002" }`) as `approval.display_commitment`, opened by a disclosure with field `display`.
+- **The binding.** Before asking the approver, the issuer computes
+
+  ```
+  binding = D({
+    "v": 2,
+    "purpose": "oar.approval",
+    "action_id": <receipt_id of the held decision>,
+    "instance_commitment": <the approval record's instance_commitment>,
+    "display_commitment": <approval.display_commitment, or null>,
+    "nonce": <32 random bytes, lower-case hex>,
+    "decision"?: "approve" | "reject"
+  })
+  ```
+
+  and records `approval.binding = { "v": 2, "nonce", "decision"?, "digest": binding }`. `decision` is present when the approver's own device signs the decision (a passkey: one challenge per button); it is absent when an outside service returns the decision.
+- **Passkeys.** The WebAuthn challenge is the 32 bytes of `binding`, base64url. The rules above on single use, verification and keeping the assertion apply.
+- **Approval by an outside service** (`method: "external"`): a bank app, a SIM check, a digital identity wallet or another service confirms the approver. The issuer sends `binding` to the service, which SHOULD return it in its proof. The record MUST carry `approval.binding` and `approval.evidence = { "provider", "format", "digest", "id"? }`, where `digest` is `"sha256:" + hex(SHA-256(proof bytes exactly as received))`. The issuer MUST keep the proof so it can be disclosed. A verifier holding the proof checks its digest and that it confirms `binding`.
+- A nonce MUST NOT be reused. A binding is valid for one approval record only.
+
+Verifiers check every binding (section 6, check 7). An issuer cannot then record a binding made for another action, change what the approver was shown after the fact, or record "approved" where the approver's device signed a rejection, without the check failing.
+
 The `button` method records a decision made in an authenticated session without an authenticator assertion; verifiers SHOULD treat it as weaker evidence. `standing_mandate` marks a decision allowed by the rules alone.
 
 ### 4.4 Adding evidence to another receipt format
@@ -160,14 +186,15 @@ A timestamp proves when a record existed, not that it was true when it was made.
 
 ## 6. Verification
 
-Inputs: the records, the disclosures given (optional), the checkpoints, the issuer's and the sealer's public keys, and the root certificates accepted for outside timestamps. Verifiers report six checks per record: `pass`, `fail` or `not_checked`.
+Inputs: the records, the disclosures given (optional), the checkpoints, the issuer's and the sealer's public keys, and the root certificates accepted for outside timestamps. Verifiers report seven checks per record: `pass`, `fail` or `not_checked`.
 
 1. **Issuer signature**: `issuer_sig.alg` is `EdDSA` and the signature verifies over `JCS(payload)` with the issuer key `kid`.
 2. **Seal**: the seal verifies over `JCS({ digest: D(payload), seq, sealed_at })` with the sealer key. A record without a seal is `not_checked` (level `issuer-signed`) unless the verifier requires seals, in which case it fails.
 3. **Chain**: group by `agent_id`; order by `seq` (records without a seal by `issued_at`); the first record has no `prev_receipt_hash`; each other record's `prev_receipt_hash` equals `D(previous record)`. For a partial set (`scope.complete` false), a missing predecessor is `not_checked`, not a failure.
 4. **Checkpoint coverage**: take the valid checkpoint with the highest `count`. For a complete set, every `seq` from 1 to `count` is present exactly once and recomputing the log head gives `head_digest`. For a partial set, a valid seal with `seq <= count` passes.
-5. **Disclosures**: for each disclosure, `D({ salt, value })` equals the record's commitment for that field (`instance`, `consumption`, `target_ref`, `state_before`, `state_after`).
+5. **Disclosures**: for each disclosure, `D({ salt, value })` equals the record's commitment for that field (`instance`, `consumption`, `target_ref`, `state_before`, `state_after`, and `display` for `approval.display_commitment`).
 6. **Outside timestamp**: take the first checkpoint with a valid sealer signature and an `anchors` entry whose `count` covers the record's `seq`. Its token passes when its message imprint equals the anchor digest; the `messageDigest` signed attribute equals the hash of the TSTInfo; the signature over the signed attributes verifies with the signer certificate (RSA PKCS#1 v1.5 or ECDSA); the signer certificate has the `timeStamping` extended key usage and was valid at `genTime`; and its chain reaches an accepted root. For a complete set, the records must also recompute that checkpoint's `head_digest`. Revocation is not checked.
+7. **Approval binding**: for a record whose `approval` carries `binding`, or whose method is `external`: `binding.v` is 2, `binding.nonce` is 64 lower-case hex characters, `decision_ref` is present, and recomputing the binding (section 4.3.1) from `decision_ref`, `instance_commitment`, `approval.display_commitment`, the nonce and `decision` gives `binding.digest`; `decision` `approve` requires result `approved`, and `reject` requires `rejected`; an `external` approval carries `binding` and `evidence` with `provider`, `format` and a `sha256` digest. Records with neither are `not_checked`.
 
 The result is `pass` only if no check fails anywhere. Verifiers SHOULD let users supply keys obtained independently (for example from the published key sets) to rule out a substituted bundle.
 
@@ -246,6 +273,6 @@ OAR is a domain profile for agent actions. Its sealing service, signed statement
 
 ## 13. Changes
 
-- **Since 0.3 (November 2026, draft)**: common reason codes (section 7); optional bundle field `retention` and the rule that verifiers ignore unknown bundle fields (section 8); retention and erasure (section 11.1). Records are unchanged and still carry `aar_version` `"0.3"`. A mapping to rules in the EU, the US and Canada is in `docs/REGULATORY-MAPPING.md`.
+- **Since 0.3 (November 2026, draft)**: approval binding version 2, what the approver was shown, and approvals by an outside service (section 4.3.1, check 7); common reason codes (section 7); optional bundle field `retention` and the rule that verifiers ignore unknown bundle fields (section 8); retention and erasure (section 11.1). Records still carry `aar_version` `"0.3"`; the new fields are optional, and verifiers that predate them ignore them. A mapping to rules in the EU, the US and Canada is in `docs/REGULATORY-MAPPING.md`.
 - **0.3 (October 2026, first public draft)**: `state_before_commitment` and `state_after_commitment`; the `confirmation` phase; outside timestamps on checkpoints; `external_ref`; the issuer-signed profile and evidence levels; bundle format `oar-bundle/0.1`.
 - **0.2-mvp**: decision, approval and execution records; commitments; chain; sealing service and checkpoints; evidence packages (`aar-evidence/0.1`).

@@ -36,6 +36,24 @@ T = TypeVar("T")
 Decision = Literal["allowed", "held", "denied"]
 
 
+def _evidence(evidence: dict | None) -> dict:
+    """Outside approval evidence: {provider, format, proof (bytes or str) or digest, id?}. Only the digest is recorded."""
+    import hashlib
+
+    if not evidence or not evidence.get("provider") or not evidence.get("format"):
+        raise ValueError("evidence: expected {provider, format, proof or digest}")
+    d = evidence.get("digest")
+    if d is None and evidence.get("proof") is not None:
+        proof = evidence["proof"]
+        d = "sha256:" + hashlib.sha256(proof.encode() if isinstance(proof, str) else proof).hexdigest()
+    if not (isinstance(d, str) and d.startswith("sha256:") and len(d) == 71):
+        raise ValueError('evidence: give the proof, or its digest as "sha256:<hex>"')
+    out = {"provider": evidence["provider"], "format": evidence["format"], "digest": d}
+    if evidence.get("id"):
+        out["id"] = evidence["id"]
+    return out
+
+
 def commitment_for(value: Any, salt: str) -> str:
     return digest({"salt": salt, "value": value})
 
@@ -56,6 +74,7 @@ class ActionHandle:
     status: str
     principal: str = ""
     target_ref: str | None = None
+    requests: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -184,14 +203,38 @@ class Recorder:
             self._actions[rid] = handle
             return handle
 
+    def request_approval(self, action: ActionHandle, *, display: Any = None, decision: Literal["approve", "reject"] | None = None) -> dict:
+        """Prepares the value a held action's approver confirms (SPEC.md section 4.3): built from the action, what the
+        approver is shown (`display`, committed) and a fresh nonce. Returns {"binding": "sha256:<hex>", "challenge":
+        <base64url>}: send `binding` to an outside approval service, or use `challenge` for a passkey."""
+        import base64
+
+        from .verify import binding_digest
+
+        with self._lock:
+            handle = self._handle(action)
+            if handle.status != "held":
+                raise ValueError(f"Only a held action can be sent for approval (this one is {handle.status}).")
+            approval_id = handle.requests[0]["approval_id"] if handle.requests else self._new_id()
+            display_c = None if display is None else self._commit(approval_id, "display", display)
+            nonce = self._random_salt()
+            d = binding_digest(handle.last_record_id, handle.instance_commitment, nonce, display_c, decision)
+            binding: dict[str, Any] = {"v": 2, "nonce": nonce, "digest": d}
+            if decision:
+                binding["decision"] = decision
+            handle.requests.append({"approval_id": approval_id, "display": display_c, "binding": binding})
+            challenge = base64.urlsafe_b64encode(bytes.fromhex(d[7:])).decode().rstrip("=")
+            return {"binding": d, "challenge": challenge}
+
     def approve(
         self,
         action: ActionHandle,
         *,
         approver: str,
         approved: bool = True,
-        method: Literal["button", "passkey", "standing_mandate"] | None = None,
+        method: Literal["button", "passkey", "standing_mandate", "external"] | None = None,
         assertion: Any = None,
+        evidence: dict | None = None,
         reasons: list[str] | None = None,
         expired: bool = False,
         run: str | None = None,
@@ -204,12 +247,27 @@ class Recorder:
                 raise ValueError(f"Only a held action can be approved or rejected (this one is {handle.status}).")
             if not approver or "@" in approver:
                 raise ValueError('approver: a stable reference such as "jordan", not an email address')
-            method = method or ("passkey" if assertion is not None else "button")
-            rid = self._new_id()
+            method = method or ("external" if evidence is not None else "passkey" if assertion is not None else "button")
             result = "expired" if expired else ("approved" if approved else "rejected")
+            want = "approve" if result == "approved" else "reject" if result == "rejected" else None
+            request = next((r for r in reversed(handle.requests) if want and r["binding"].get("decision") == want), None) or next(
+                (r for r in reversed(handle.requests) if not r["binding"].get("decision")), None
+            )
+            if method == "external" and request is None:
+                raise ValueError("An approval by an outside service needs request_approval() first, so the service confirms this exact action.")
+            rid = request["approval_id"] if request else self._new_id()
             approval: dict[str, Any] = {"method": method, "approver": approver, "at": self._stamp()}
             if assertion is not None:
                 approval["assertion_digest"] = digest(assertion)
+            if request:
+                if request["display"]:
+                    approval["display_commitment"] = request["display"]
+                unused = {r["display"] for r in handle.requests if r["display"] and r["display"] != request["display"]}
+                if unused:
+                    self._secrets = [x for x in self._secrets if not (x.field == "display" and commitment_for(x.value, x.salt) in unused)]
+                approval["binding"] = request["binding"]
+            if method == "external":
+                approval["evidence"] = _evidence(evidence)
             principal = f"approver:{approver}"
             record = self._write({
                 "receipt_id": rid,
@@ -226,6 +284,7 @@ class Recorder:
             handle.principal = principal
             handle.last_record_id = rid
             handle.status = result
+            handle.requests = []
             return record
 
     def execute(
