@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Rules mapping.** `docs/REGULATORY-MAPPING.md`: how OAR records line up with rules in the EU (AI Act, payment
+  rules, GDPR), the US (New York DFS, NIST) and Canada (OSFI E-23), with what is not covered yet and the proposals
+  that would cover it.
+- **Specification (no change to records):** common reason codes such as `new_payee` and `payee_details_changed`
+  (section 7); an optional `retention` field on bundles, and verifiers ignore bundle fields they do not know
+  (section 8); retention and erasure (section 11.1).
+- Test vectors `retention.json` and `erased-values.json`.
+
 ## 0.3.0 (2 November 2026)
 
 - **Database demo.** `npx @openactionrecord/cli demo --database`: an AI operations agent on a production database.
