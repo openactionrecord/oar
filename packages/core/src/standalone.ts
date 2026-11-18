@@ -324,6 +324,12 @@ export const STANDALONE_VERIFIER_JS = `var OAR_TSA_ROOTS = ${JSON.stringify(TSA_
         else if (!src || !src.authorities) aprobs.push('The authority check names no authority set: no earlier record of this action carries one.');
         else {
           if ((await digest({ v: 1, purpose: 'oar.authorities', authorities: src.authorities })) !== ac.set_digest) aprobs.push('The authority check covers a different authority set than the decision relied on.');
+          if (ac.evidence !== undefined) {
+            if (!Array.isArray(ac.evidence) || !ac.evidence.length) aprobs.push('The authority check evidence is malformed: it must be a non-empty list.');
+            else ac.evidence.forEach(function (e, i) {
+              if (!e || typeof e !== 'object' || !Number.isInteger(e.index) || e.index < 0 || e.index >= src.authorities.length || typeof e.format !== 'string' || !e.format || !isDigest(e.digest)) aprobs.push('Authority check evidence ' + (i + 1) + ' is malformed: it needs the index of an authority in the set, a format and a sha256 digest.');
+            });
+          }
           if (ac.result === 'current') {
             var stale = src.authorities.findIndex(function (a) { return a.expires_at !== undefined && Date.parse(a.expires_at) <= Date.parse(ac.checked_at); });
             if (stale >= 0) aprobs.push('The authority check says every authority was current, but authority ' + (stale + 1) + ' had expired by then.');

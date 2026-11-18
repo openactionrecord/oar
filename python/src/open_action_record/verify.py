@@ -377,6 +377,20 @@ def _time(value: Any) -> float | None:
         return None
 
 
+def check_authority_evidence(evidence: Any, set_size: int) -> list[str]:
+    """Problems with an authority check's evidence (SPEC.md section 4.5), given the size of the set it covers."""
+    if evidence is None:
+        return []
+    if not isinstance(evidence, list) or not evidence:
+        return ["The authority check evidence is malformed: it must be a non-empty list."]
+    problems = []
+    for i, e in enumerate(evidence, 1):
+        idx = e.get("index") if isinstance(e, dict) else None
+        if not isinstance(e, dict) or not isinstance(idx, int) or isinstance(idx, bool) or not 0 <= idx < set_size or not isinstance(e.get("format"), str) or not e.get("format") or not _is_digest(e.get("digest")):
+            problems.append(f"Authority check evidence {i} is malformed: it needs the index of an authority in the set, a format and a sha256 digest.")
+    return problems
+
+
 def authority_set_digest(authorities: list) -> str:
     """SPEC.md section 4.5: the digest an execution record's authority_check names."""
     return digest({"v": 1, "purpose": "oar.authorities", "authorities": authorities})
@@ -429,6 +443,7 @@ def check_authority(p: dict, by_id: dict) -> list[str] | None:
             else:
                 if authority_set_digest(src["authorities"]) != c["set_digest"]:
                     problems.append("The authority check covers a different authority set than the decision relied on.")
+                problems.extend(check_authority_evidence(c.get("evidence"), len(src["authorities"])))
                 if c["result"] == "current":
                     at = _time(c["checked_at"])
                     stale = next((i for i, a in enumerate(src["authorities"], 1) if a.get("expires_at") is not None and (_time(a["expires_at"]) or 0) <= at), None)

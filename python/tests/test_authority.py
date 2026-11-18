@@ -35,3 +35,15 @@ def test_execute_needs_the_recheck() -> None:
     action = oar.decide(type="payout", target="payments", params={"amountCents": 1}, result="allowed", authorities=[TOKEN])
     with pytest.raises(ValueError, match="authority_check"):
         oar.execute(action)
+
+
+def test_recheck_evidence_is_recorded_by_digest_and_verifies() -> None:
+    oar = _recorder()
+    action = oar.decide(type="payout", target="payments", params={"amountCents": 50_000}, result="allowed", authorities=[TOKEN])
+    record = oar.execute(action, authority_check=["valid"], authority_evidence=[{"index": 0, "format": "jwt-introspection", "proof": "header.payload.sig"}])
+    evidence = record["payload"]["authority_check"]["evidence"]
+    assert evidence[0]["index"] == 0 and evidence[0]["digest"].startswith("sha256:")
+    assert verify_bundle(oar.bundle()).result == "pass"
+    with pytest.raises(ValueError, match="authority_evidence"):
+        other = oar.decide(type="payout", target="payments", params={"amountCents": 1}, result="allowed", authorities=[TOKEN])
+        oar.execute(other, authority_check=["valid"], authority_evidence=[{"index": 3, "format": "x", "proof": "y"}])

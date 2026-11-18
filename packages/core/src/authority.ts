@@ -34,6 +34,35 @@ export interface AuthorityCheck {
   result: 'current' | 'changed';
   /** For "changed": which authorities changed, by index, and to what. */
   changes?: { index: number; status: AuthorityStatus }[];
+  /**
+   * Optional: the authorities' own answers to the re-check (for example a signed token introspection response),
+   * each by digest, so the re-check does not rest on the issuer's word alone.
+   */
+  evidence?: AuthorityEvidence[];
+}
+
+export interface AuthorityEvidence {
+  /** Position, from 0, of the authority in the set that this answer is about. */
+  index: number;
+  /** The format of the answer, for example "jwt-introspection" (RFC 9701) or "provider-json". */
+  format: string;
+  /** "sha256:<hex>" of the answer's bytes exactly as received. */
+  digest: string;
+  /** The answer's identifier in the authority issuer's system, optional. */
+  id?: string;
+}
+
+/** Problems with an authority check's evidence, given the size of the set it covers. */
+export function checkAuthorityEvidence(evidence: unknown, setSize: number): string[] {
+  if (evidence === undefined) return [];
+  if (!Array.isArray(evidence) || evidence.length === 0) return ['The authority check evidence is malformed: it must be a non-empty list.'];
+  const problems: string[] = [];
+  evidence.forEach((e: Partial<AuthorityEvidence>, i) => {
+    if (typeof e !== 'object' || e === null || !Number.isInteger(e.index) || (e.index as number) < 0 || (e.index as number) >= setSize || typeof e.format !== 'string' || !e.format || !isSha256Digest(e.digest)) {
+      problems.push(`Authority check evidence ${i + 1} is malformed: it needs the index of an authority in the set, a format and a sha256 digest.`);
+    }
+  });
+  return problems;
 }
 
 export function authoritySetDigest(authorities: readonly Authority[]): string {
@@ -97,6 +126,7 @@ export function checkAuthority(payload: Payload, byId: ReadonlyMap<string, Paylo
         problems.push('The authority check names no authority set: no earlier record of this action carries one.');
       } else {
         if (authoritySetDigest(source.authorities) !== c.set_digest) problems.push('The authority check covers a different authority set than the decision relied on.');
+        problems.push(...checkAuthorityEvidence(c.evidence, source.authorities.length));
         if (c.result === 'current') {
           const stale = source.authorities.findIndex((a) => a.expires_at !== undefined && Date.parse(a.expires_at) <= Date.parse(c.checked_at));
           if (stale >= 0) problems.push(`The authority check says every authority was current, but authority ${stale + 1} had expired by then.`);

@@ -74,4 +74,4 @@ export {
 export { anchorDigest, verifyTimestampToken, type TimestampResult } from './timestamp/timestamp.js';
 export { TSA_ROOTS, type TsaRoot } from './timestamp/tsa-roots.js';
 export { summarize, actionKey, outcomeClass, OUTCOME_LABELS, type ActionSummary, type ActionStep, type Outcome, type OutcomeClass } from './summary.js';
-export { authoritySetDigest, checkAuthority, AUTHORITY_PURPOSE, AUTHORITY_STATUSES, type Authority, type AuthorityCheck, type AuthorityStatus } from './authority.js';
+export { authoritySetDigest, checkAuthority, checkAuthorityEvidence, AUTHORITY_PURPOSE, AUTHORITY_STATUSES, type Authority, type AuthorityCheck, type AuthorityEvidence, type AuthorityStatus } from './authority.js';

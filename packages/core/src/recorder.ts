@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import { AUTHORITY_STATUSES, authoritySetDigest, type Authority, type AuthorityStatus } from './authority.js';
+import { AUTHORITY_STATUSES, authoritySetDigest, type Authority, type AuthorityCheck, type AuthorityStatus } from './authority.js';
 import { bindingChallenge, bindingDigest, type ApprovalBinding, type ApprovalEvidence, type BoundDecision } from './approval.js';
 import { commitmentFor } from './crypto/commitment.js';
 import { canonicalDigest, isSha256Digest, sha256Hex } from './crypto/hash.js';
@@ -144,7 +144,11 @@ export interface ExecuteInput {
    * Required when the decision relied on authorities: the result of checking them again just before the action
    * commits. Any status other than "valid" records the action as refused, and nothing runs.
    */
-  authorityCheck?: { statuses: AuthorityStatus[] };
+  authorityCheck?: {
+    statuses: AuthorityStatus[];
+    /** Optional: each authority's own answer to the re-check (a signed introspection response, say). Only its digest is recorded. */
+    evidence?: { index: number; format: string; proof?: string | Uint8Array; digest?: string; id?: string }[];
+  };
 }
 
 export interface ConfirmInput {
@@ -336,14 +340,27 @@ export class Recorder {
         throw new Error(`Only an allowed or approved action can be executed (this one is ${state.handle.status}).`);
       }
       let ok = input.ok ?? true;
-      let check: { checked_at: string; set_digest: string; result: 'current' | 'changed'; changes?: { index: number; status: AuthorityStatus }[] } | undefined;
+      let check: AuthorityCheck | undefined;
       if (state.authorities) {
         const statuses = input.authorityCheck?.statuses;
         if (!statuses || statuses.length !== state.authorities.length || statuses.some((s) => !AUTHORITY_STATUSES.includes(s))) {
           throw new Error(`This action relied on ${state.authorities.length} authorities: pass authorityCheck.statuses with one status each, checked just now.`);
         }
         const changes = statuses.map((status, index) => ({ index, status })).filter((c) => c.status !== 'valid');
-        check = { checked_at: this.stamp(), set_digest: authoritySetDigest(state.authorities), result: changes.length ? 'changed' : 'current', ...(changes.length ? { changes } : {}) };
+        const evidence = input.authorityCheck?.evidence?.map((e) => {
+          const digest = e.digest ?? (e.proof !== undefined ? `sha256:${sha256Hex(e.proof)}` : undefined);
+          if (!e.format || !Number.isInteger(e.index) || e.index < 0 || e.index >= state.authorities!.length || !isSha256Digest(digest)) {
+            throw new TypeError('authorityCheck.evidence: each needs { index of an authority, format, proof or digest }');
+          }
+          return { index: e.index, format: e.format, digest, ...(e.id ? { id: e.id } : {}) };
+        });
+        check = {
+          checked_at: this.stamp(),
+          set_digest: authoritySetDigest(state.authorities),
+          result: changes.length ? 'changed' : 'current',
+          ...(changes.length ? { changes } : {}),
+          ...(evidence?.length ? { evidence } : {}),
+        };
       }
       const refused = check?.result === 'changed';
       if (refused) ok = false;

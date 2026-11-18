@@ -226,6 +226,27 @@ async function main(): Promise<void> {
     add({ file: 'authority-stale.json', description: 'The re-check says every authority was current, but the delegated authorization had already expired. Only the authority check fails.', bundle, expect: { result: 'fail', failedChecks: ['authority'] } });
   }
 
+  {
+    // The authority's issuer answered the re-check itself (a signed token introspection response); its digest is recorded.
+    const { oar } = recorder('authority-attested', true);
+    const action = await oar.decide({ type: 'vendor_payout', target: 'payments', params: { payee: 'P-1001', amountCents: 420_000 }, idempotencyKey: 'payout-5', result: 'allowed', authorities });
+    const introspection = 'eyJhbGciOiJFZERTQSIsInR5cCI6InRva2VuLWludHJvc3BlY3Rpb24rand0In0.eyJhY3RpdmUiOnRydWV9.c2lnbmF0dXJl';
+    await oar.execute(action, { targetRef: 'po_1005', authorityCheck: { statuses: ['valid', 'valid'], evidence: [{ index: 0, format: 'jwt-introspection', proof: introspection }] } });
+    await oar.confirm(action, { confirmed: true });
+    add({ file: 'authority-attested.json', description: "A payout whose re-check at commit carries the delegated authorization issuer's own signed answer (a token introspection response), by digest. Outcome class: committed.", bundle: await oar.bundle(), expect: { result: 'pass', level: 'sealed', outcomes: ['confirmed'] } });
+  }
+  {
+    // The issuer points the re-check evidence at an authority that is not in the set, and re-signs. Only the authority check catches it.
+    const { oar } = recorder('authority-evidence-misplaced', false);
+    const action = await oar.decide({ type: 'vendor_payout', target: 'payments', params: { payee: 'P-1001', amountCents: 420_000 }, idempotencyKey: 'payout-6', result: 'allowed', authorities });
+    await oar.execute(action, { authorityCheck: { statuses: ['valid', 'valid'], evidence: [{ index: 1, format: 'provider-json', proof: '{"ok":true}' }] } });
+    const bundle = await oar.bundle();
+    const last = bundle.records[bundle.records.length - 1]!;
+    last.payload.authority_check!.evidence![0]!.index = 5;
+    bundle.records[bundle.records.length - 1] = signRecord(last.payload, ISSUER);
+    add({ file: 'authority-evidence-misplaced.json', description: 'Re-check evidence that names an authority outside the set (the issuer changed it and re-signed). Only the authority check fails.', bundle, expect: { result: 'fail', failedChecks: ['authority'] } });
+  }
+
   // Check every expectation before writing anything.
   for (const v of vectors) {
     const report = verifyBundle(v.bundle, { tsaRoots: roots, ...(v.options ?? {}) });

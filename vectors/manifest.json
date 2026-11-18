@@ -229,6 +229,33 @@
           "authority"
         ]
       }
+    },
+    {
+      "file": "authority-attested.json",
+      "description": "A payout whose re-check at commit carries the delegated authorization issuer's own signed answer (a token introspection response), by digest. Outcome class: committed.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "sealed",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    },
+    {
+      "file": "authority-evidence-misplaced.json",
+      "description": "Re-check evidence that names an authority outside the set (the issuer changed it and re-signed). Only the authority check fails.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "authority"
+        ]
+      }
     }
   ]
 }

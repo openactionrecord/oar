@@ -1,0 +1,122 @@
+{
+  "format": "oar-bundle/0.1",
+  "generated_at": "2026-10-25T14:00:06.000Z",
+  "org": {
+    "id": "example-store",
+    "name": "Example Store (test vectors)"
+  },
+  "scope": {
+    "from": "2026-10-25T14:00:03.000Z",
+    "to": "2026-10-25T14:00:05.000Z",
+    "complete": true
+  },
+  "records": [
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:db8b5b39-b382-458d-8ec2-d7305b2a9321",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "vendor_payout",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:7c5bfb6e5eeffa1eeb23758835b0c3805494b2eb4af06f452ab3b93cb0a19dd2",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "approval": {
+          "method": "standing_mandate",
+          "at": "2026-10-25T14:00:03.000Z"
+        },
+        "result": "allowed",
+        "reasons": [
+          "within_limits"
+        ],
+        "enforced": true,
+        "authorities": [
+          {
+            "type": "aauth",
+            "issuer": "https://person.example",
+            "digest": "sha256:06d5213f27c4b8bd5bbc138e0b8203ce86492a37d0c502599cdf499d31471ac0",
+            "expires_at": "2026-10-26T14:00:00Z",
+            "checked_at": "2026-10-25T14:00:01.000Z",
+            "status": "valid"
+          },
+          {
+            "type": "x401",
+            "issuer": "https://wallet.example",
+            "digest": "sha256:4fa0d4379fe177b05e428a5e6aa8b74f81d1b2761804daa69fa845a78a9b686e",
+            "checked_at": "2026-10-25T14:00:02.000Z",
+            "status": "valid"
+          }
+        ],
+        "issued_at": "2026-10-25T14:00:03.000Z"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "4a8df8ba4fbab1e31ec4d8ae8d0a98659aa2c24b22c319ec4500d63bb2637e073270da45a4f6cb9b197bae14328c343557ca8b28aebd654fc3155cc8f004cc0a"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:b149cb15-7264-4b0c-8bb1-06225efca385",
+        "phase": "execution",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "vendor_payout",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:7c5bfb6e5eeffa1eeb23758835b0c3805494b2eb4af06f452ab3b93cb0a19dd2",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "result": "executed",
+        "reasons": [
+          "executed"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:db8b5b39-b382-458d-8ec2-d7305b2a9321",
+        "authority_check": {
+          "checked_at": "2026-10-25T14:00:04.000Z",
+          "set_digest": "sha256:f7c692f623982e2b084e0f7670d0ad8adc9be0ded95b692dd96622ad04e03ff5",
+          "result": "current",
+          "evidence": [
+            {
+              "index": 5,
+              "format": "provider-json",
+              "digest": "sha256:4062edaf750fb8074e7e83e0c9028c94e32468a8b6f1614774328ef045150f93"
+            }
+          ]
+        },
+        "issued_at": "2026-10-25T14:00:05.000Z",
+        "prev_receipt_hash": "sha256:7a8f099b464b9417ac99008dcadd4d408e5d5684c2a509c2c3e38c8b5fbf245b"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "40f40a26f105e0b2a96233e699dcc9a14f32730d01c3196c64a6531e787e0b5c3173b05591fb195ec54becdafd670183d81d6c1c07b5be6c1c0f7428e9d95b0c"
+      }
+    }
+  ],
+  "disclosures": [],
+  "checkpoints": [],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+          "kid": "oar-test-issuer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  }
+}

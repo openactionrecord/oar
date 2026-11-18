@@ -82,6 +82,23 @@ def _authority(a: dict, checked_at: str) -> dict:
     return out
 
 
+def _authority_evidence(e: dict, set_size: int) -> dict:
+    """An authority's own answer to the re-check: {index, format, proof (bytes or str) or digest, id?}. Only the digest is recorded."""
+    import hashlib
+
+    d = e.get("digest")
+    if d is None and e.get("proof") is not None:
+        proof = e["proof"]
+        d = "sha256:" + hashlib.sha256(proof.encode() if isinstance(proof, str) else proof).hexdigest()
+    idx = e.get("index")
+    if not e.get("format") or not isinstance(idx, int) or not 0 <= idx < set_size or not is_sha256_digest(d):
+        raise ValueError("authority_evidence: each needs {index of an authority, format, proof or digest}")
+    out = {"index": idx, "format": e["format"], "digest": d}
+    if e.get("id"):
+        out["id"] = e["id"]
+    return out
+
+
 def _authority_reason(changes: list[dict]) -> str:
     if any(c["status"] == "revoked" for c in changes):
         return "authority_revoked"
@@ -341,6 +358,7 @@ class Recorder:
         ok: bool = True,
         reasons: list[str] | None = None,
         authority_check: list[str] | None = None,
+        authority_evidence: list[dict] | None = None,
         run: str | None = None,
     ) -> dict:
         """Records the execution, with commitments to the affected state before and after.
@@ -363,6 +381,8 @@ class Recorder:
                 check = {"checked_at": self._stamp(), "set_digest": authority_set_digest(handle.authorities), "result": "changed" if changes else "current"}
                 if changes:
                     check["changes"] = changes
+                if authority_evidence:
+                    check["evidence"] = [_authority_evidence(e, n) for e in authority_evidence]
             refused = bool(check and check["result"] == "changed")
             if refused:
                 ok = False

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Evidence for the re-check at commit** (SPEC section 4.5): `authority_check.evidence` records, by digest, an
+  authority's own answer to the re-check, such as a signed token introspection response, so the re-check does not
+  rest on the issuer's word alone. Check 8 fails evidence that names an authority outside the set. Test vectors
+  `authority-attested.json` and `authority-evidence-misplaced.json`. `authorityCheck.evidence` (TypeScript) and
+  `authority_evidence` (Python).
+
 ## 0.5.0 (18 November 2026)
 
 - **Authority set and the re-check at commit** (SPEC section 4.5): a decision record can carry `authorities`, the

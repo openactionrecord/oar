@@ -76,3 +76,15 @@ describe('authority set (SPEC.md section 4.5)', () => {
     for (const o of ['not_confirmed', 'executed_unconfirmed', 'failed', 'awaiting_approval', 'approved_not_executed', 'allowed_not_executed'] as const) expect(outcomeClass(o)).toBe('unresolved');
   });
 });
+
+describe('authority check evidence', () => {
+  it('accepts answers that name an authority in the set, and rejects others', async () => {
+    const { checkAuthorityEvidence } = await import('./authority.js');
+    const digest = `sha256:${'a'.repeat(64)}`;
+    expect(checkAuthorityEvidence(undefined, 2)).toEqual([]);
+    expect(checkAuthorityEvidence([{ index: 1, format: 'jwt-introspection', digest }], 2)).toEqual([]);
+    expect(checkAuthorityEvidence([{ index: 2, format: 'jwt-introspection', digest }], 2)).toHaveLength(1);
+    expect(checkAuthorityEvidence([{ index: 0, format: '', digest }], 2)).toHaveLength(1);
+    expect(checkAuthorityEvidence([], 2)).toHaveLength(1);
+  });
+});
