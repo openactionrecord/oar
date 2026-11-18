@@ -6,5 +6,5 @@ In short: be respectful, assume good faith, critique ideas rather than people, a
 personal attacks and discriminatory language are not acceptable in issues, pull requests, discussions or any
 other project space.
 
-Report concerns to **info@tridris.com**. Reports are handled confidentially by the maintainers, who may warn,
+Report concerns privately through **Security → Report a vulnerability** on this repository, with "Conduct" in the title. Reports are handled confidentially by the maintainers, who may warn,
 temporarily ban or permanently ban anyone who breaks these rules.

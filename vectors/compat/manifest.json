@@ -1,5 +1,5 @@
 {
-  "description": "Records written by the first implementation, under the format's earlier name (Agent Action Receipts, AAR 0.3, evidence format \"aar-evidence/0.1\"). Verifiers must keep accepting them. TEST KEYS ONLY. Also real evidence packages exported by the Tridris product (October 2026), which re-salts commitments on every record.",
+  "description": "Records written by the first implementation, under the format's earlier name (Agent Action Receipts, AAR 0.3, evidence format \"aar-evidence/0.1\"). Verifiers must keep accepting them. TEST KEYS ONLY. Also real evidence packages exported by an existing product (October 2026), which re-salts commitments on every record.",
   "tsa_roots_file": "test-tsa-roots.json",
   "cases": [
     {
@@ -43,8 +43,8 @@
       }
     },
     {
-      "file": "tridris-evidence-single-action.json",
-      "description": "A Tridris evidence package for one $1,900 refund: held, approved, executed with state before and after, confirmed. Partial (one action).",
+      "file": "product-evidence-single-action.json",
+      "description": "A product evidence package for one $1,900 refund: held, approved, executed with state before and after, confirmed. Partial (one action).",
       "options": {},
       "expect": {
         "result": "pass",
@@ -55,8 +55,8 @@
       }
     },
     {
-      "file": "tridris-evidence-date-range.json",
-      "description": "A Tridris evidence package for every action in a date range: the refund, a blocked 80% discount, and a confirmed store credit.",
+      "file": "product-evidence-date-range.json",
+      "description": "A product evidence package for every action in a date range: the refund, a blocked 80% discount, and a confirmed store credit.",
       "options": {},
       "expect": {
         "result": "pass",
@@ -69,7 +69,7 @@
       }
     },
     {
-      "file": "tridris-evidence-single-action-tampered.json",
+      "file": "product-evidence-single-action-tampered.json",
       "description": "The single-action package with the approver changed.",
       "options": {},
       "expect": {
