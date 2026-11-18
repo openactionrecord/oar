@@ -173,9 +173,23 @@ The full format is in **[SPEC.md](SPEC.md)**.
 |---|---|
 | [`@openactionrecord/core`](packages/core) | Write records (`createRecorder`), run a sealing service, verify, summarise. Node.js 20+. |
 | [`@openactionrecord/cli`](packages/cli) | `oar demo`, `oar verify`, `oar inspect`, `oar html`, `oar keygen` |
+| [`@openactionrecord/mcp`](packages/mcp) | Record every tool call on an MCP server, with the caller's token re-checked before the tool runs |
 | [`open-action-record`](python) | Python: write and verify records, `oar-verify`, and the Hermes Agent plugin |
 | [Playground](packages/web) | A static page that verifies bundles in the browser |
 | [Test vectors](vectors) | Every verifier must pass them. They include records written by the first implementation. |
+
+## Implementations wanted
+
+OAR is meant to be written and verified by many tools, not one. A second implementation, in another language or inside another project, is the most useful contribution there is. Good places to start:
+
+| Wanted | What it involves |
+|---|---|
+| **A verifier in Go or Rust** | Implement checks 1 to 8 of [SPEC.md](SPEC.md) section 6. You are done when it reaches the expected result on every case in [`vectors/`](vectors). |
+| **An adapter for an agent framework** | LangChain or LangGraph, the OpenAI Agents SDK, the Vercel AI SDK, CrewAI. Wrap tool calls the way [`packages/mcp`](packages/mcp) does. |
+| **Output from an existing receipt or audit tool** | If your project already logs agent actions, emit OAR records alongside, or point at your receipts with `external_ref` ([example](examples/add-to-another-receipt.ts)). |
+| **An outcome reader** | Read back from Stripe, Shopify, Postgres or another system of record to confirm what changed. |
+
+Open an issue to say you're starting, so others can find your work. Implementations that pass the vectors are listed in the specification's Internet-Draft as running code.
 
 ## Roadmap
 
