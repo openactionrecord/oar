@@ -146,6 +146,7 @@ var OUTCOME = {
   not_confirmed: ['Executed, but the system of record does NOT show it', 'bad'],
   executed_unconfirmed: ['Executed; no confirmation recorded', 'wait'],
   failed: ['Execution failed', 'bad'],
+  refused: ['Not run: an authority changed before it committed', 'bad'],
   awaiting_approval: ['Held, waiting for a person', 'wait'],
   denied: ['Blocked by the rules', 'bad'],
   rejected: ['Rejected by a person', 'bad'],
@@ -167,7 +168,7 @@ function stories(pkg) {
     var appr = last(function (p) { return p.phase === 'decision' && ['approved', 'rejected', 'expired'].indexOf(p.result) >= 0; });
     var exe = last(function (p) { return p.phase === 'execution'; });
     var conf = last(function (p) { return p.phase === 'confirmation'; });
-    var o = conf ? (conf.payload.result === 'confirmed' ? 'confirmed' : 'not_confirmed') : exe ? (exe.payload.result === 'executed' ? 'executed_unconfirmed' : 'failed') :
+    var o = conf ? (conf.payload.result === 'confirmed' ? 'confirmed' : 'not_confirmed') : exe ? (exe.payload.result === 'executed' ? 'executed_unconfirmed' : exe.payload.result === 'refused' ? 'refused' : 'failed') :
       appr ? (appr.payload.result === 'approved' ? 'approved_not_executed' : appr.payload.result) : dec && dec.payload.result === 'denied' ? 'denied' : dec && dec.payload.result === 'held' ? 'awaiting_approval' : 'allowed_not_executed';
     function disclosed(rec, field) { if (!rec) return undefined; var d = (pkg.disclosures || []).find(function (x) { return x.receiptId === rec.payload.receipt_id && x.field === field; }); return d ? d.value : undefined; }
     return { first: list[0].payload, list: list, outcome: o, before: disclosed(exe, 'state_before'), after: disclosed(exe, 'state_after') };
@@ -182,7 +183,7 @@ function stepText(p) {
   return ['confirmation', p.result === 'confirmed' ? 'Confirmed in the system of record' : 'NOT confirmed in the system of record' + why];
 }
 
-var CHECKS = [['issuer_signature', 'Signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures'], ['approval', 'Approval']];
+var CHECKS = [['issuer_signature', 'Signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures'], ['approval', 'Approval'], ['authority', 'Authority']];
 var LABEL = { pass: 'pass', fail: 'FAIL', not_checked: '–' };
 
 async function check() {

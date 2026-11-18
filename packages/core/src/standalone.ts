@@ -15,7 +15,7 @@ type SubtleCrypto = webcrypto.SubtleCrypto;
 
 export const STANDALONE_VERIFIER_JS = `var OAR_TSA_ROOTS = ${JSON.stringify(TSA_ROOTS)};\n` + String.raw`async function oarVerifyBundle(pkg, subtle, opts) {
   var enc = new TextEncoder();
-  var LABELS = { issuer_signature: 'Issuer signature', seal: 'Seal', chain: 'Chain', checkpoint: 'Checkpoint coverage', disclosures: 'Disclosures', timestamp: 'Outside timestamp', approval: 'Approval binding' };
+  var LABELS = { issuer_signature: 'Issuer signature', seal: 'Seal', chain: 'Chain', checkpoint: 'Checkpoint coverage', disclosures: 'Disclosures', timestamp: 'Outside timestamp', approval: 'Approval binding', authority: 'Authority' };
   var FIELDS = { instance: 'instance_commitment', consumption: 'consumption_commitment', target_ref: 'target_ref_commitment', state_before: 'state_before_commitment', state_after: 'state_after_commitment' };
   function jcs(v) {
     if (v === null || typeof v !== 'object') {
@@ -53,7 +53,7 @@ export const STANDALONE_VERIFIER_JS = `var OAR_TSA_ROOTS = ${JSON.stringify(TSA_
   var entries = [];
   for (var envelope of pkg.records || pkg.receipts || []) {
     var p = envelope.payload || {};
-    var r = { receiptId: String(p.receipt_id), agentId: String(p.agent_id), phase: p.phase, type: p.action && p.action.type, result: 'pass', level: 'issuer-signed', outcome: p.result, checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked', approval: 'not_checked' }, messages: [] };
+    var r = { receiptId: String(p.receipt_id), agentId: String(p.agent_id), phase: p.phase, type: p.action && p.action.type, result: 'pass', level: 'issuer-signed', outcome: p.result, checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked', approval: 'not_checked', authority: 'not_checked' }, messages: [] };
     var sig = envelope.issuer_sig || {};
     if (sig.alg === 'EdDSA' && (await sigOk(keys.issuer, sig.kid, p, sig.sig))) r.checks.issuer_signature = 'pass';
     else r.messages.push('The issuer signature does not match this record.');
@@ -291,6 +291,53 @@ export const STANDALONE_VERIFIER_JS = `var OAR_TSA_ROOTS = ${JSON.stringify(TSA_
     probs.forEach(function (m) { ae.report.messages.push(m); });
   }
 
+  // Authority: the outside artifacts a decision relied on, and their re-check at the moment the action committed.
+  var STATUSES = ['valid', 'expired', 'revoked', 'invalid', 'unknown'];
+  var isTime = function (v) { return typeof v === 'string' && !isNaN(Date.parse(v)); };
+  var isDigest = function (v) { return /^sha256:[0-9a-f]{64}$/.test(String(v)); };
+  var byId = {};
+  for (var be of entries) if (be.envelope.payload) byId[be.envelope.payload.receipt_id] = be.envelope.payload;
+  var withAuth = function (p) { for (var i = 0; p && i < 16; i++) { if (p.authorities !== undefined) return p; p = p.decision_ref ? byId[p.decision_ref] : undefined; } return undefined; };
+  for (var ce of entries) {
+    var cp = ce.envelope.payload;
+    if (!cp) continue;
+    var aprobs = [], achecked = false;
+    if (cp.authorities !== undefined) {
+      achecked = true;
+      var setProbs = [];
+      if (!Array.isArray(cp.authorities) || !cp.authorities.length) setProbs.push('The authority set is malformed: it must be a non-empty list.');
+      else cp.authorities.forEach(function (a, i) {
+        if (!a || typeof a.type !== 'string' || !a.type || typeof a.issuer !== 'string' || !a.issuer || !isDigest(a.digest) || !isTime(a.checked_at) || STATUSES.indexOf(a.status) < 0) { setProbs.push('Authority ' + (i + 1) + ' is malformed: it needs type, issuer, a sha256 digest, checked_at and a status.'); return; }
+        if ((a.not_before !== undefined && !isTime(a.not_before)) || (a.expires_at !== undefined && !isTime(a.expires_at))) setProbs.push('Authority ' + (i + 1) + ' has an invalid validity window.');
+        else if (a.status === 'valid' && a.expires_at && Date.parse(a.expires_at) <= Date.parse(a.checked_at)) setProbs.push('Authority ' + (i + 1) + ' is recorded as valid, but it had expired when it was checked.');
+        else if (a.status === 'valid' && a.not_before && Date.parse(a.not_before) > Date.parse(a.checked_at)) setProbs.push('Authority ' + (i + 1) + ' is recorded as valid, but it was not yet valid when it was checked.');
+      });
+      aprobs = aprobs.concat(setProbs);
+      if (!setProbs.length && (cp.result === 'allowed' || cp.result === 'approved') && cp.authorities.some(function (a) { return a.status !== 'valid'; })) aprobs.push('The action was ' + cp.result + ', but not every authority it relied on was valid.');
+    }
+    if (cp.phase === 'execution') {
+      var src = cp.decision_ref ? withAuth(byId[cp.decision_ref]) : undefined;
+      var ac = cp.authority_check;
+      if (ac !== undefined) {
+        achecked = true;
+        if (!isTime(ac.checked_at) || !isDigest(ac.set_digest) || (ac.result !== 'current' && ac.result !== 'changed')) aprobs.push('The authority check is malformed.');
+        else if (!src || !src.authorities) aprobs.push('The authority check names no authority set: no earlier record of this action carries one.');
+        else {
+          if ((await digest({ v: 1, purpose: 'oar.authorities', authorities: src.authorities })) !== ac.set_digest) aprobs.push('The authority check covers a different authority set than the decision relied on.');
+          if (ac.result === 'current') {
+            var stale = src.authorities.findIndex(function (a) { return a.expires_at !== undefined && Date.parse(a.expires_at) <= Date.parse(ac.checked_at); });
+            if (stale >= 0) aprobs.push('The authority check says every authority was current, but authority ' + (stale + 1) + ' had expired by then.');
+            if (cp.result === 'refused') aprobs.push('The authority check says every authority was current, but the action was recorded as refused.');
+          } else if (cp.result !== 'refused') aprobs.push('An authority changed before the action committed, but the action was not recorded as refused.');
+        }
+      } else if (src && src.authorities && cp.result === 'executed') {
+        achecked = true;
+        aprobs.push('The action ran without its authority set being checked again at the moment it committed.');
+      }
+    }
+    if (achecked) { ce.report.checks.authority = aprobs.length ? 'fail' : 'pass'; aprobs.forEach(function (m) { ce.report.messages.push(m); }); }
+  }
+
   var failedChecks = [];
   var LEVELS = ['issuer-signed', 'sealed', 'timestamped'];
   var LEVEL_TEXT = { 'issuer-signed': 'Issuer-signed', sealed: 'Sealed by a separate service', timestamped: 'Sealed and timestamped by an outside authority' };
@@ -361,7 +408,7 @@ table{border-collapse:collapse;width:100%;margin-top:12px} th,td{border-bottom:1
 ${STANDALONE_VERIFIER_JS}
 var EMBEDDED = ${embedded};
 var LABEL = { pass: 'pass', fail: 'FAIL', not_checked: 'not checked' };
-var CHECKS = [['issuer_signature', 'Issuer signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures'], ['approval', 'Approval']];
+var CHECKS = [['issuer_signature', 'Issuer signature'], ['seal', 'Seal'], ['chain', 'Chain'], ['checkpoint', 'Checkpoint'], ['timestamp', 'Timestamp'], ['disclosures', 'Disclosures'], ['approval', 'Approval'], ['authority', 'Authority']];
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function fp(set) { return ((set && set.keys) || []).map(function (k) { return esc(k.kid) + ' (' + esc(String(k.x).slice(0, 16)) + '…)'; }).join(', '); }
 async function show(pkg) {

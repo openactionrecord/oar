@@ -1,0 +1,115 @@
+{
+  "format": "oar-bundle/0.1",
+  "generated_at": "2026-10-25T14:00:06.000Z",
+  "org": {
+    "id": "example-store",
+    "name": "Example Store (test vectors)"
+  },
+  "scope": {
+    "from": "2026-10-25T14:00:03.000Z",
+    "to": "2026-10-25T14:00:05.000Z",
+    "complete": true
+  },
+  "records": [
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:b936e0fa-3e25-4903-8efb-29adc7b3b7fb",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "vendor_payout",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:1e782a8eb78d049ad2f5958000e4c065b9a82e089db00eb95bc59a4c8e3728b0",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "approval": {
+          "method": "standing_mandate",
+          "at": "2026-10-25T14:00:03.000Z"
+        },
+        "result": "allowed",
+        "reasons": [
+          "within_limits"
+        ],
+        "enforced": true,
+        "authorities": [
+          {
+            "type": "aauth",
+            "issuer": "https://person.example",
+            "digest": "sha256:06d5213f27c4b8bd5bbc138e0b8203ce86492a37d0c502599cdf499d31471ac0",
+            "expires_at": "2026-10-26T14:00:00Z",
+            "checked_at": "2026-10-25T14:00:01.000Z",
+            "status": "valid"
+          },
+          {
+            "type": "x401",
+            "issuer": "https://wallet.example",
+            "digest": "sha256:4fa0d4379fe177b05e428a5e6aa8b74f81d1b2761804daa69fa845a78a9b686e",
+            "checked_at": "2026-10-25T14:00:02.000Z",
+            "status": "valid"
+          }
+        ],
+        "issued_at": "2026-10-25T14:00:03.000Z"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "ef880b9a40562eac66d04c1d6e5b30fb53318db26d9e0f803eb47970553204a868b6279b49806bec9132500d1a58fef60e1ffaf9ad0cc58871a0efde713b530b"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:ea59eef8-43e8-4f26-8a0f-9ca737051496",
+        "phase": "execution",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "vendor_payout",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:1e782a8eb78d049ad2f5958000e4c065b9a82e089db00eb95bc59a4c8e3728b0",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "result": "executed",
+        "reasons": [
+          "executed"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:b936e0fa-3e25-4903-8efb-29adc7b3b7fb",
+        "authority_check": {
+          "checked_at": "2026-10-27T09:00:00.000Z",
+          "set_digest": "sha256:f7c692f623982e2b084e0f7670d0ad8adc9be0ded95b692dd96622ad04e03ff5",
+          "result": "current"
+        },
+        "issued_at": "2026-10-25T14:00:05.000Z",
+        "prev_receipt_hash": "sha256:704c1dc8faf6c5267c1b7ff286afa588bf25f9e1abec4e672990e143125343d1"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "7a7cd3dfb69606216cc2b97336214b593a36f20261f1f791350dd030ec9c80e72cbdfffc4afbaf5d2b1bc17fc7e9317f3ee980b527164033c1123dc7f83dcf08"
+      }
+    }
+  ],
+  "disclosures": [],
+  "checkpoints": [],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+          "kid": "oar-test-issuer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  }
+}

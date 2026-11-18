@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased (0.5.0)
+
+- **Authority set and the re-check at commit** (SPEC section 4.5): a decision record can carry `authorities`, the
+  outside artifacts it relied on (an AAuth or x401 token, an OAuth grant, a session, a mandate, an approval
+  service's result), each by digest with its validity window and status. The execution record carries
+  `authority_check`, the same set checked again just before the action committed. If an authority changed, the
+  action does not run and is recorded with the new execution result `refused` and reason `authority_revoked`,
+  `authority_expired` or `authority_invalid`. `decide({ authorities })` and `execute({ authorityCheck })` in the
+  TypeScript and Python recorders.
+- **Eighth verifier check, authority**, in all three verifiers. It fails an action allowed on an authority that was
+  not valid, a re-check that covers a different set, a re-check that calls an expired authority current, and an
+  action executed without its authority set being checked again. Test vectors `authority-current.json`,
+  `authority-revoked.json`, `authority-not-rechecked.json` and `authority-stale.json`.
+- **Outcome classes** (SPEC section 6): every action is also reported as `committed`, `refused` or `unresolved`,
+  so a relying party can tell what is known to have happened. `outcomeClass()` and `outcome_class()`.
+- **Specification:** reason code `authority_conflict`; composing with other protocols (section 12.1) and relying
+  on an OAR record (section 12.2).
+
 ## 0.4.0 (17 November 2026)
 
 - **Approval binding, version 2** (SPEC section 4.3.1): the approval record carries the value the approver

@@ -29,7 +29,7 @@ PAYLOAD_ORDER = (
     "aar_version", "receipt_id", "phase", "org_id", "agent_id", "run_id", "action", "instance_commitment",
     "authorization_ref", "principal", "approval", "consumption_commitment", "result", "reasons", "enforced",
     "decision_ref", "target_ref_commitment", "state_before_commitment", "state_after_commitment", "external_ref",
-    "issued_at", "prev_receipt_hash",
+    "authorities", "authority_check", "issued_at", "prev_receipt_hash",
 )
 
 T = TypeVar("T")
@@ -54,6 +54,42 @@ def _evidence(evidence: dict | None) -> dict:
     return out
 
 
+AUTHORITY_STATUSES = ("valid", "expired", "revoked", "invalid", "unknown")
+
+
+def _authority(a: dict, checked_at: str) -> dict:
+    """One authority the decision relied on: {type, issuer, artifact (bytes or str) or digest, not_before?, expires_at?, status?}."""
+    import hashlib
+
+    if not isinstance(a, dict) or not a.get("type") or not a.get("issuer"):
+        raise ValueError("authorities: each needs {type, issuer, artifact or digest}")
+    d = a.get("digest")
+    if d is None and a.get("artifact") is not None:
+        art = a["artifact"]
+        d = "sha256:" + hashlib.sha256(art.encode() if isinstance(art, str) else art).hexdigest()
+    if not is_sha256_digest(d):
+        raise ValueError('authorities: give the artifact, or its digest as "sha256:<hex>"')
+    status = a.get("status", "valid")
+    if status not in AUTHORITY_STATUSES:
+        raise ValueError(f'authorities: unknown status "{status}"')
+    out = {"type": a["type"], "issuer": a["issuer"], "digest": d}
+    if a.get("not_before"):
+        out["not_before"] = a["not_before"]
+    if a.get("expires_at"):
+        out["expires_at"] = a["expires_at"]
+    out["checked_at"] = checked_at
+    out["status"] = status
+    return out
+
+
+def _authority_reason(changes: list[dict]) -> str:
+    if any(c["status"] == "revoked" for c in changes):
+        return "authority_revoked"
+    if any(c["status"] == "expired" for c in changes):
+        return "authority_expired"
+    return "authority_invalid"
+
+
 def commitment_for(value: Any, salt: str) -> str:
     return digest({"salt": salt, "value": value})
 
@@ -75,6 +111,7 @@ class ActionHandle:
     principal: str = ""
     target_ref: str | None = None
     requests: list[dict] = field(default_factory=list)
+    authorities: list[dict] | None = None
 
 
 @dataclass
@@ -168,6 +205,7 @@ class Recorder:
         usage: Any = None,
         enforced: bool = True,
         external: dict | None = None,
+        authorities: list[dict] | None = None,
         run: str | None = None,
     ) -> ActionHandle:
         """Records the decision on an action: "allowed", "held" (waits for a person) or "denied"."""
@@ -198,8 +236,14 @@ class Recorder:
                 if not external.get("format") or not is_sha256_digest(external.get("digest")):
                     raise ValueError('external: expected {"format": ..., "digest": "sha256:<hex>"}')
                 fields["external_ref"] = {k: external[k] for k in ("format", "digest", "id") if external.get(k)}
+            auth = None
+            if authorities is not None:
+                auth = [_authority(a, self._stamp()) for a in authorities]
+                if not auth:
+                    raise ValueError("authorities: give at least one, or leave it out")
+                fields["authorities"] = auth
             self._write(fields, run)
-            handle = ActionHandle(rid, type, target, instance, rid, result, self._policy_principal)
+            handle = ActionHandle(rid, type, target, instance, rid, result, self._policy_principal, authorities=auth)
             self._actions[rid] = handle
             return handle
 
@@ -296,13 +340,32 @@ class Recorder:
         target_ref: str | None = None,
         ok: bool = True,
         reasons: list[str] | None = None,
+        authority_check: list[str] | None = None,
         run: str | None = None,
     ) -> dict:
-        """Records the execution, with commitments to the affected state before and after."""
+        """Records the execution, with commitments to the affected state before and after.
+
+        If the decision relied on authorities, pass `authority_check`: one status per authority, checked just now.
+        If any is not "valid", the action must not run: it is recorded as "refused".
+        """
+        from .verify import authority_set_digest
+
         with self._lock:
             handle = self._handle(action)
             if handle.status not in ("allowed", "approved"):
                 raise ValueError(f"Only an allowed or approved action can be executed (this one is {handle.status}).")
+            check = None
+            if handle.authorities:
+                n = len(handle.authorities)
+                if authority_check is None or len(authority_check) != n or any(st not in AUTHORITY_STATUSES for st in authority_check):
+                    raise ValueError(f"This action relied on {n} authorities: pass authority_check with one status each, checked just now.")
+                changes = [{"index": i, "status": st} for i, st in enumerate(authority_check) if st != "valid"]
+                check = {"checked_at": self._stamp(), "set_digest": authority_set_digest(handle.authorities), "result": "changed" if changes else "current"}
+                if changes:
+                    check["changes"] = changes
+            refused = bool(check and check["result"] == "changed")
+            if refused:
+                ok = False
             rid = self._new_id()
             fields: dict[str, Any] = {
                 "receipt_id": rid,
@@ -310,8 +373,8 @@ class Recorder:
                 "action": {"type": handle.type, "target": handle.target},
                 "instance_commitment": handle.instance_commitment,
                 "principal": handle.principal,
-                "result": "executed" if ok else "failed",
-                "reasons": reasons or ["executed" if ok else "execution_failed"],
+                "result": "refused" if refused else "executed" if ok else "failed",
+                "reasons": reasons or [_authority_reason(check["changes"]) if refused else "executed" if ok else "execution_failed"],
                 "enforced": True,
                 "decision_ref": handle.last_record_id,
             }
@@ -322,9 +385,11 @@ class Recorder:
                 fields["state_before_commitment"] = self._commit(rid, "state_before", before)
             if after is not None:
                 fields["state_after_commitment"] = self._commit(rid, "state_after", after)
+            if check is not None:
+                fields["authority_check"] = check
             record = self._write(fields, run)
             handle.last_record_id = rid
-            handle.status = "executed" if ok else "failed"
+            handle.status = "refused" if refused else "executed" if ok else "failed"
             return record
 
     def confirm(
