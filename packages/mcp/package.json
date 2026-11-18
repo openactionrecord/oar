@@ -1,0 +1,51 @@
+{
+  "name": "@openactionrecord/mcp",
+  "version": "0.1.0",
+  "description": "Record every tool call on an MCP server as an Open Action Record: the rule decision, the authorities re-checked at commit, and the outcome.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.12"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "audit",
+    "receipts",
+    "open-action-record",
+    "oar"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openactionrecord/oar.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://github.com/openactionrecord/oar/tree/main/packages/mcp#readme",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openactionrecord/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  }
+}

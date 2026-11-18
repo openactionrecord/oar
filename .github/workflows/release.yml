@@ -71,7 +71,7 @@ jobs:
       - run: pnpm build
       - name: Publish (core first, then the CLI that depends on it)
         run: |
-          for pkg in core cli; do
+          for pkg in core cli mcp; do
             name=$(node -p "require('./packages/$pkg/package.json').name")
             version=$(node -p "require('./packages/$pkg/package.json').version")
             if npm view "$name@$version" version >/dev/null 2>&1; then echo "$name@$version is already published"; continue; fi

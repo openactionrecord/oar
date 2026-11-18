@@ -98,6 +98,8 @@ verifyBundle(bundle).result;                                      // "pass"
 
 **Python:** `pip install open-action-record`, then the same thing with `Recorder(...).run(...)` (sync or async). See [python/](python).
 
+**MCP servers:** `npm install @openactionrecord/mcp`, then `recordTools(server, oar, { target })` before registering tools: every call is recorded with its rule decision, the caller's access token re-checked just before the tool runs, and the outcome. See [packages/mcp](packages/mcp).
+
 **Hermes Agent:** `hermes plugins install openactionrecord/oar/integrations/hermes --enable` records every approval decision (who or what approved, on which surface, and whether the call then succeeded) as verifiable records, without writing commands in clear. See [integrations/hermes](integrations/hermes).
 
 Every path is recorded: allowed, held, approved, rejected, denied, failed, confirmed and not confirmed. Errors from `execute` are recorded, then re-thrown. Prefer explicit steps? Use `oar.decide()`, `oar.approve()`, `oar.execute()` and `oar.confirm()`.
@@ -177,7 +179,7 @@ The full format is in **[SPEC.md](SPEC.md)**.
 
 ## Roadmap
 
-- More ready-made adapters: MCP SDK middleware, OpenAI Agents SDK, LangChain, Vercel AI SDK, Claude Code hooks (Hermes Agent is done)
+- More ready-made adapters: OpenAI Agents SDK, LangChain, Vercel AI SDK, Claude Code hooks (MCP servers and Hermes Agent are done)
 - Outcome readers for Stripe, Shopify and Postgres
 - COSE encoding and a SCITT registration profile
 - Publishing checkpoints to a public transparency log

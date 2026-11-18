@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **`@openactionrecord/mcp` 0.1.0:** record every tool call on an MCP server. `recordTools(server, oar, options)`
+  wraps tools as they are registered: rule decision, the caller's access token as the authority set, the re-check
+  just before the tool runs (refused if revoked or expired), state before and after, and confirmation.
 - **Evidence for the re-check at commit** (SPEC section 4.5): `authority_check.evidence` records, by digest, an
   authority's own answer to the re-check, such as a signed token introspection response, so the re-check does not
   rest on the issuer's word alone. Check 8 fails evidence that names an authority outside the set. Test vectors
