@@ -338,7 +338,7 @@ OAR is a domain profile for agent actions. Its sealing service, signed statement
 
 ### 12.1 Composing with other protocols
 
-Protocols for agent identity and authorization (for example AAuth, x401 and OAuth 2.0 Rich Authorization Requests, RFC 9396) answer whether an agent may ask. Approval services answer whether a person agreed. OAR does not replace them: it records which of their artifacts one action relied on, and what each said when the action was decided and again when it committed (section 4.5). Two joins make this work:
+Protocols for agent identity and authorization (for example AAuth, x401 and OAuth 2.0 Rich Authorization Requests, RFC 9396) answer whether an agent may ask. Approval services answer whether a person agreed. OAR does not replace them: it records which of their artifacts one action relied on, and what each said when the action was decided and again when it committed (section 4.5). It ties the pieces together in two places:
 
 1. **Authority to action**, at decision: the signed decision record binds the digest of each outside artifact to the one action instance (`instance_commitment`).
 2. **Action to outcome**, at commit and after: the execution record binds the re-check to that set (`set_digest`), and the confirmation binds the action to what the system of record shows.
