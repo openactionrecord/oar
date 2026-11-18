@@ -175,6 +175,60 @@
           "approval"
         ]
       }
+    },
+    {
+      "file": "authority-current.json",
+      "description": "A payout that relied on two outside artifacts (a delegated authorization and a credential proof), both checked again just before it committed, then confirmed. Outcome class: committed.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "sealed",
+        "outcomes": [
+          "confirmed"
+        ]
+      }
+    },
+    {
+      "file": "authority-revoked.json",
+      "description": "The person revoked the delegated authorization between the decision and the payout. The re-check found it, so the payout was refused and nothing ran. Outcome class: refused.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "pass",
+        "level": "sealed",
+        "outcomes": [
+          "refused"
+        ]
+      }
+    },
+    {
+      "file": "authority-not-rechecked.json",
+      "description": "A payout that ran without its authorities being checked again at the moment it committed (the issuer removed the check and re-signed). Only the authority check fails.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "authority"
+        ]
+      }
+    },
+    {
+      "file": "authority-stale.json",
+      "description": "The re-check says every authority was current, but the delegated authorization had already expired. Only the authority check fails.",
+      "options": {
+        "tsa_roots": "test"
+      },
+      "expect": {
+        "result": "fail",
+        "failedChecks": [
+          "authority"
+        ]
+      }
     }
   ]
 }

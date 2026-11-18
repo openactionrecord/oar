@@ -9,6 +9,7 @@ export type Outcome =
   | 'not_confirmed'
   | 'executed_unconfirmed'
   | 'failed'
+  | 'refused'
   | 'awaiting_approval'
   | 'denied'
   | 'rejected'
@@ -21,6 +22,7 @@ export const OUTCOME_LABELS: Record<Outcome, string> = {
   not_confirmed: 'Executed, but the system of record does NOT show it',
   executed_unconfirmed: 'Executed; no confirmation recorded',
   failed: 'Execution failed',
+  refused: 'Not run: an authority changed before it committed',
   awaiting_approval: 'Held, waiting for a person',
   denied: 'Blocked by the rules',
   rejected: 'Rejected by a person',
@@ -28,6 +30,18 @@ export const OUTCOME_LABELS: Record<Outcome, string> = {
   approved_not_executed: 'Approved; no execution recorded',
   allowed_not_executed: 'Allowed; no execution recorded',
 };
+
+/**
+ * The three outcome classes a relying party needs (SPEC.md section 6): the consequence happened and the system of
+ * record shows it; it was refused and nothing ran; or the evidence does not settle it either way.
+ */
+export type OutcomeClass = 'committed' | 'refused' | 'unresolved';
+
+export function outcomeClass(outcome: Outcome): OutcomeClass {
+  if (outcome === 'confirmed') return 'committed';
+  if (outcome === 'denied' || outcome === 'rejected' || outcome === 'expired' || outcome === 'refused') return 'refused';
+  return 'unresolved';
+}
 
 export interface ActionStep {
   phase: 'decision' | 'approval' | 'execution' | 'confirmation';
@@ -47,6 +61,8 @@ export interface ActionSummary {
   type: string;
   target: string;
   outcome: Outcome;
+  /** committed, refused or unresolved. */
+  outcomeClass: OutcomeClass;
   outcomeText: string;
   /** True when the outcome claim rests only on records that verified. */
   verified?: boolean;
@@ -82,7 +98,7 @@ export function summarize(records: readonly OarRecord[], disclosures: readonly D
 
     let outcome: Outcome;
     if (confirmation) outcome = confirmation.payload.result === 'confirmed' ? 'confirmed' : 'not_confirmed';
-    else if (execution) outcome = execution.payload.result === 'executed' ? 'executed_unconfirmed' : 'failed';
+    else if (execution) outcome = execution.payload.result === 'executed' ? 'executed_unconfirmed' : execution.payload.result === 'refused' ? 'refused' : 'failed';
     else if (approval) outcome = approval.payload.result === 'rejected' ? 'rejected' : approval.payload.result === 'expired' ? 'expired' : 'approved_not_executed';
     else if (decision?.payload.result === 'denied') outcome = 'denied';
     else if (decision?.payload.result === 'held') outcome = 'awaiting_approval';
@@ -102,6 +118,7 @@ export function summarize(records: readonly OarRecord[], disclosures: readonly D
       type: first.action?.type,
       target: first.action?.target,
       outcome,
+      outcomeClass: outcomeClass(outcome),
       outcomeText: OUTCOME_LABELS[outcome],
       ...(report ? { verified: verifiedIds.every((v) => v === true) } : {}),
       ...(approval?.payload.approval?.approver ? { approvedBy: approval.payload.approval.approver, approvalMethod: approval.payload.approval.method } : {}),

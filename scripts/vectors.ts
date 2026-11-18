@@ -184,6 +184,48 @@ async function main(): Promise<void> {
     add({ file: 'approval-flipped.json', description: 'An approver signed a rejection with a passkey; the issuer recorded and re-signed it as approved. Only the approval binding check fails.', bundle, expect: { result: 'fail', failedChecks: ['approval'] } });
   }
 
+  // Section 4.5: a payout that relied on two outside artifacts, a delegated authorization and a credential proof,
+  // both checked again at the moment it committed.
+  const authorities = [
+    { type: 'aauth', issuer: 'https://person.example', artifact: 'aauth grant: payout up to $5,000 to payee P-1001', expiresAt: '2026-10-26T14:00:00Z' },
+    { type: 'x401', issuer: 'https://wallet.example', artifact: 'x401 proof: verified business customer' },
+  ];
+  {
+    const { oar } = recorder('authority-current', true);
+    const action = await oar.decide({ type: 'vendor_payout', target: 'payments', params: { payee: 'P-1001', amountCents: 420_000 }, idempotencyKey: 'payout-1', result: 'allowed', authorities });
+    await oar.execute(action, { targetRef: 'po_1001', authorityCheck: { statuses: ['valid', 'valid'] } });
+    await oar.confirm(action, { confirmed: true });
+    add({ file: 'authority-current.json', description: 'A payout that relied on two outside artifacts (a delegated authorization and a credential proof), both checked again just before it committed, then confirmed. Outcome class: committed.', bundle: await oar.bundle({ disclose: 'all' }), expect: { result: 'pass', level: 'sealed', outcomes: ['confirmed'] } });
+  }
+  {
+    const { oar } = recorder('authority-revoked', true);
+    const action = await oar.decide({ type: 'vendor_payout', target: 'payments', params: { payee: 'P-1001', amountCents: 420_000 }, idempotencyKey: 'payout-2', result: 'allowed', authorities });
+    await oar.execute(action, { authorityCheck: { statuses: ['revoked', 'valid'] } });
+    add({ file: 'authority-revoked.json', description: 'The person revoked the delegated authorization between the decision and the payout. The re-check found it, so the payout was refused and nothing ran. Outcome class: refused.', bundle: await oar.bundle(), expect: { result: 'pass', level: 'sealed', outcomes: ['refused'] } });
+  }
+  {
+    // The issuer drops the re-check from the execution record and re-signs it. Only the authority check catches it.
+    const { oar } = recorder('authority-not-rechecked', false);
+    const action = await oar.decide({ type: 'vendor_payout', target: 'payments', params: { payee: 'P-1001', amountCents: 420_000 }, idempotencyKey: 'payout-3', result: 'allowed', authorities });
+    await oar.execute(action, { authorityCheck: { statuses: ['valid', 'valid'] } });
+    const bundle = await oar.bundle();
+    const last = bundle.records[bundle.records.length - 1]!;
+    delete last.payload.authority_check;
+    bundle.records[bundle.records.length - 1] = signRecord(last.payload, ISSUER);
+    add({ file: 'authority-not-rechecked.json', description: 'A payout that ran without its authorities being checked again at the moment it committed (the issuer removed the check and re-signed). Only the authority check fails.', bundle, expect: { result: 'fail', failedChecks: ['authority'] } });
+  }
+  {
+    // The re-check claims every authority was current, a day after the delegated authorization expired.
+    const { oar } = recorder('authority-stale', false);
+    const action = await oar.decide({ type: 'vendor_payout', target: 'payments', params: { payee: 'P-1001', amountCents: 420_000 }, idempotencyKey: 'payout-4', result: 'allowed', authorities });
+    await oar.execute(action, { authorityCheck: { statuses: ['valid', 'valid'] } });
+    const bundle = await oar.bundle();
+    const last = bundle.records[bundle.records.length - 1]!;
+    last.payload.authority_check!.checked_at = '2026-10-27T09:00:00.000Z';
+    bundle.records[bundle.records.length - 1] = signRecord(last.payload, ISSUER);
+    add({ file: 'authority-stale.json', description: 'The re-check says every authority was current, but the delegated authorization had already expired. Only the authority check fails.', bundle, expect: { result: 'fail', failedChecks: ['authority'] } });
+  }
+
   // Check every expectation before writing anything.
   for (const v of vectors) {
     const report = verifyBundle(v.bundle, { tsaRoots: roots, ...(v.options ?? {}) });

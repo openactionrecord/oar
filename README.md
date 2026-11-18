@@ -24,6 +24,7 @@ AI agents now delete rows, deploy code, change customer accounts and issue refun
 Open Action Record is an open format and toolkit for signed, verifiable records of agent actions:
 
 - **Approval of the exact action.** When a rule holds an action, the record shows who approved it, bound to that one action and to what the approver was shown (this payment, this amount, this payee). An approval can't be reused for anything else, whether it came from a passkey or from an outside service such as a bank app or a SIM check.
+- **Authority checked again at commit.** A decision records the outside artifacts it relied on (a delegated token, an OAuth grant, a session, an approval service's result) by digest. Just before the action commits, each one is checked again; if one was revoked or expired in between, the action doesn't run and the record says why.
 - **What actually changed.** The execution record commits to the affected state before and after. A separate confirmation reads the system of record back. An agent that reports success without effect shows up as **NOT confirmed**.
 - **Safe to share.** Amounts, parameters, IDs and state are salted commitments. Share a bundle with an auditor, an insurer or a customer without revealing anything, then disclose field by field.
 - **Verifiable offline, with open tools.** Ed25519 signatures, per-agent hash chains, an optional separate sealing service, and optional RFC 3161 timestamps from an outside authority. Three independent verifiers: TypeScript, browser (WebCrypto) and Python.

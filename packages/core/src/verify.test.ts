@@ -29,7 +29,7 @@ describe('verify: valid records', () => {
     expect(report.failedChecks).toEqual([]);
     expect(report.checkpoint?.count).toBe(12);
     for (const r of report.receipts) {
-      expect(r.checks).toEqual({ issuer_signature: 'pass', seal: 'pass', chain: 'pass', checkpoint: 'pass', disclosures: 'pass', timestamp: 'not_checked', approval: 'not_checked' });
+      expect(r.checks).toEqual({ issuer_signature: 'pass', seal: 'pass', chain: 'pass', checkpoint: 'pass', disclosures: 'pass', timestamp: 'not_checked', approval: 'not_checked', authority: 'not_checked' });
     }
     expect(report.messages[0]).toBe('All 12 records passed verification. Evidence level: Sealed by a separate service.');
     expect(report.level).toBe('sealed');
