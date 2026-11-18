@@ -1,12 +1,12 @@
 # How OAR records line up with rules in the EU, the US and Canada
 
-*As of 17 November 2026. Not legal advice.*
+*As of 18 November 2026. Not legal advice.*
 
 OAR records are evidence: of what an AI agent asked to do, what the rules decided, who approved it, and what actually
 changed. **Evidence helps an organisation meet a rule; it does not make anyone compliant.** Whether a system meets a
 rule depends on how it is built and run, and on legal advice for that organisation.
 
-This page maps what OAR records today (`SPEC.md`, version 0.3 with the November 2026 additions) to rules that ask for that kind of evidence. Where OAR
+This page maps what OAR records today (`SPEC.md`, OAR 0.5) to rules that ask for that kind of evidence. Where OAR
 does not cover something yet, the last column says so, and items marked *proposed* are open proposals for a future
 version, not part of the specification.
 
@@ -39,7 +39,7 @@ version, not part of the specification.
 
 ## Proposed changes this page refers to
 
-These are proposals for discussion, not part of OAR 0.3. Comments are welcome in an issue.
+These are proposals for discussion, not part of OAR 0.5. Comments are welcome in an issue.
 
 | Proposal | What it adds | Rules it supports |
 |---|---|---|

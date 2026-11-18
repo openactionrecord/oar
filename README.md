@@ -17,7 +17,7 @@
 | **See it, nothing to install** | [Open the playground](https://openactionrecord.github.io/oar/) | Signed records from the database demo, verified in your browser. Press a tamper button and watch verification fail. |
 | **Run it (1 minute)** | `npx @openactionrecord/cli demo --database` | Needs Node.js 20+. No account, no setup. |
 | **Record your own agent (5 minutes)** | [Quickstart](docs/QUICKSTART.md) | A runnable example with a real database, then how to point it at your system and your agent's tools. |
-| **Check it against the rules** | [Rules mapping](docs/REGULATORY-MAPPING.md) | How OAR records line up with the EU AI Act, payment rules, GDPR, New York DFS and OSFI E-23, and what is not covered yet. |
+| **Check it against the rules** | [OAR and the rules](https://openactionrecord.github.io/oar/rules.html) ([source](docs/REGULATORY-MAPPING.md)) | How OAR records line up with the EU AI Act, payment rules, GDPR, New York DFS and OSFI E-23, and what is not covered yet. |
 
 AI agents now delete rows, deploy code, change customer accounts and issue refunds. When one gets it wrong, logs tell you a tool was called. They don't tell you **whether a person approved that exact action**, **what it actually changed**, or **whether the system of record agrees**. And they were written by the system you are trying to check.
 

@@ -132,7 +132,7 @@ await writeFile('evidence.json', JSON.stringify(await oar.bundle()));   // verif
 </div></section>
 
 <footer><div class="wrap">
-  Open Action Record is an open format: specification CC BY 4.0, code Apache-2.0. Maintained by the Open Action Record authors; contributions welcome on <a href="${REPO}">GitHub</a>.
+  Open Action Record is an open format: specification CC BY 4.0, code Apache-2.0. Maintained by the Open Action Record authors; contributions welcome on <a href="${REPO}">GitHub</a>. How OAR records line up with the AI Act, PSD2, GDPR, New York DFS and OSFI: <a href="rules.html">OAR and the rules</a>.
   The sample bundles use sample keys. Verification here checks the keys inside the bundle; compare them with the keys the issuer publishes to rule out a substituted bundle.
 </div></footer>
 
