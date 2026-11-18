@@ -194,7 +194,7 @@ If OAR is useful to you, a star helps other developers find it.
 
 **Does it store personal data?** Records hold salted commitments, never values. You keep the salts and disclose values only to the people who need them.
 
-**Who maintains it?** OAR is maintained by [Tridris](https://tridris.com), which uses it in its product. The format and these tools are free to use without Tridris. Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+**Who maintains it?** The Open Action Record authors. The format and these tools are free to use, with no account or service required. Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Contributing, security, licence
 

@@ -5,8 +5,7 @@ or that leaks committed values, is a security issue. Please report it privately.
 
 ## Reporting
 
-- Use GitHub's private vulnerability reporting: **Security → Report a vulnerability** on this repository.
-- Or email **info@tridris.com** with "OAR security" in the subject.
+Use GitHub's private vulnerability reporting: **Security → Report a vulnerability** on this repository.
 
 Please include the affected package and version, a minimal bundle or test case, and what you expected. We aim to
 acknowledge reports within 3 working days and to agree a disclosure date with you. Please do not open public
