@@ -23,6 +23,7 @@ const HELP = `${c.bold('oar')}: Open Action Record, from the command line
 ${c.bold('Usage')}
   oar demo [dir] [--offline]         See what OAR proves, in one minute (writes files to ./oar-demo)
       --database                     The same demo with an AI operations agent on a production database
+      --payouts                      A payments agent whose delegated token is revoked mid-action: the payout is refused
   oar verify <bundle.json>           Verify a bundle and show what each action did
       --keys <keys.json>             Check against keys you trust ({ "issuer": JWKS, "sealer": JWKS })
       --require-seal                 Fail records not countersigned by a separate sealing service
@@ -92,7 +93,7 @@ async function main(argv: string[]): Promise<number> {
 
   switch (command) {
     case 'demo':
-      return demo(args[0] ?? 'oar-demo', { offline: Boolean(flags.offline), scenario: flags.database ? 'database' : 'store' });
+      return demo(args[0] ?? 'oar-demo', { offline: Boolean(flags.offline), scenario: flags.payouts ? 'payouts' : flags.database ? 'database' : 'store' });
 
     case 'verify': {
       const file = need(args[0], 'oar verify <bundle.json>');

@@ -65,6 +65,8 @@ Now someone edits the record to pretend deleting the customers table never neede
 ✘ Verification failed: Issuer signature, Seal, Checkpoint coverage, Chain check failed.
 ```
 
+**A permission revoked mid-action** (`demo --payouts`; in the next npm release, or run `pnpm demo --payouts` from a clone today): an AI payments agent pays suppliers with a token a finance manager delegated to it. A $4,200 payout runs and is confirmed. A $9,800 payout to a new payee is approved, then the manager revokes the token; the re-check just before the money moves catches it, nothing is paid, and the record shows the payout as **refused**, with the token it relied on by digest.
+
 The store demo tells the same story with a $1,900 refund held for approval, an 80% discount blocked, and a $45 refund the payment API called "succeeded" that never happened. Every run writes `oar-demo/evidence.json` and an offline `verify.html` you can open in a browser.
 
 ## Record your own agent

@@ -56,10 +56,30 @@ function productionDatabase() {
   };
 }
 
-export type DemoScenario = 'store' | 'database';
+/** A pretend payout system, and the authorization server that issued the agent's delegated token. */
+function payoutSystem() {
+  const paid = new Map<string, { payee: string; cents: number }>();
+  const revoked = new Set<string>();
+  let n = 0;
+  return {
+    pay(payee: string, cents: number) {
+      const id = `po_${(++n).toString().padStart(4, '0')}`;
+      paid.set(id, { payee, cents });
+      return { id, status: 'paid' };
+    },
+    wasPaid: (id: string) => paid.has(id),
+    paidCount: () => paid.size,
+    revoke: (token: string) => revoked.add(token),
+    /** Token introspection: is this delegated token still active? */
+    introspect: (token: string) => (revoked.has(token) ? 'revoked' : 'valid') as 'valid' | 'revoked',
+  };
+}
+
+export type DemoScenario = 'store' | 'database' | 'payouts';
 
 export async function demo(dir: string, options: { offline?: boolean; scenario?: DemoScenario } = {}): Promise<number> {
   if (options.scenario === 'database') return databaseDemo(dir, options);
+  if (options.scenario === 'payouts') return payoutsDemo(dir, options);
   line();
   line(c.bold('Open Action Record · demo'));
   line(c.dim('An AI support agent works for an online store. Its rules: refunds over $1,250 need a person; discounts are capped at 20%.'));
@@ -262,6 +282,49 @@ async function databaseDemo(dir: string, options: { offline?: boolean }): Promis
     tamperText: 'Now someone edits the record to pretend deleting the customers table never needed a person:',
     note: ' (table names, row counts and migration names are committed, not written in clear)',
     ok: cleanup.status === 'completed',
+  });
+}
+
+/** `oar demo --payouts`: an AI payments agent acting for a person, whose permission is revoked mid-action. */
+async function payoutsDemo(dir: string, options: { offline?: boolean }): Promise<number> {
+  line();
+  line(c.bold('Open Action Record · demo: payouts, and a permission revoked mid-action'));
+  line(c.dim("An AI payments agent pays suppliers for Sam, a finance manager, using a token Sam delegated to it. Its rules: payouts to a new payee need Sam's approval."));
+  line(c.dim('Every payout records the token it relied on, by digest, and checks that token again just before the money moves.'));
+  line();
+
+  const issuer = generateSigningKey('payments-agent-2026');
+  const sealer = createLocalSealer({ key: generateSigningKey('payments-sealer-2026') });
+  const oar = createRecorder({ issuer, sealer, org: 'example-co', orgName: 'Example Co', agent: 'payments-agent', policyId: 'payout-rules-v1', policy: { newPayeeNeedsApproval: true } });
+  const pay = payoutSystem();
+  const token = 'eyJhbGciOiJFZERTQSJ9.delegated-payout-token-for-sam.c2ln';
+  const authorities = [{ type: 'delegated-token', issuer: 'https://auth.example-co.com', artifact: token, expiresAt: new Date(Date.now() + 3_600_000).toISOString() }];
+
+  line(`${c.cyan('1.')} The agent pays a known supplier $4,200 with Sam's delegated token.`);
+  await pause(250);
+  const first = await oar.decide({ type: 'payout', target: 'payments', params: { payee: 'P-1001', amountCents: 420_000 }, result: 'allowed', reasons: ['known_payee', 'within_limits'], authorities });
+  const firstPaid = pay.pay('P-1001', 420_000);
+  await oar.execute(first, { targetRef: firstPaid.id, authorityCheck: { statuses: [pay.introspect(token)] } });
+  await oar.confirm(first, { confirmed: pay.wasPaid(firstPaid.id) });
+  line(`   ${PASS} the token is still valid at the moment of payment; paid, and the payment system confirms it`);
+  await pause(200);
+
+  line(`${c.cyan('2.')} The agent sets up $9,800 to a new payee. Sam approves it on their phone.`);
+  await pause(250);
+  const second = await oar.decide({ type: 'payout', target: 'payments', params: { payee: 'P-2077', amountCents: 980_000 }, result: 'held', reasons: ['new_payee'], authorities });
+  await oar.approve(second, { approver: 'sam', approved: true });
+  line(`   ${c.dim('approved by Sam… then, a minute later, Sam spots a fraud warning and revokes the agent\'s token')}`);
+  pay.revoke(token);
+  await pause(250);
+  await oar.execute(second, { authorityCheck: { statuses: [pay.introspect(token)] } });
+  line(`   ${FAIL} the re-check just before the money moves finds the token ${c.bold('revoked')}: nothing is paid. Recorded as refused.`);
+  line(`   ${c.dim(`payouts made: ${pay.paidCount()} (only the first)`)}`);
+  line();
+
+  return finish(oar, sealer, dir, options, {
+    tamperText: "Now someone edits the record to pretend the new payee never needed Sam's approval:",
+    note: ' (payees, amounts and the token are committed or digested, not written in clear)',
+    ok: pay.paidCount() === 1,
   });
 }
 

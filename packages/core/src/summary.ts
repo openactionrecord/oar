@@ -150,7 +150,9 @@ function step(r: OarRecord, verified: boolean | undefined): ActionStep {
     case 'execution':
       text = p.result === 'executed'
         ? `Executed${p.state_before_commitment && p.state_after_commitment ? '; state before and after recorded' : ''}`
-        : `Execution failed${why}`;
+        : p.result === 'refused'
+          ? `Not run: an authority it relied on changed before it committed${why}`
+          : `Execution failed${why}`;
       break;
     default:
       text = p.result === 'confirmed' ? 'Confirmed in the system of record' : `NOT confirmed in the system of record${why}`;

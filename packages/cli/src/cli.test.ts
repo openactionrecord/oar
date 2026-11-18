@@ -47,6 +47,17 @@ describe('oar CLI', () => {
     expect(html).not.toMatch(/<script[^>]+src=/);
   }, 60_000);
 
+  it('payouts demo: a revoked token is caught at commit, the payout is refused, and every verifier agrees', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oar-demo-pay-'));
+    const demo = await oar(['demo', dir, '--payouts', '--offline']);
+    expect(demo.code).toBe(0);
+    expect(demo.out).toContain('[committed]');
+    expect(demo.out).toContain('[refused]');
+    expect(demo.out).toContain('authority_revoked');
+    const ok = await oar(['verify', join(dir, 'evidence.json'), '--cross-check']);
+    expect(ok.code).toBe(0);
+  }, 60_000);
+
   it('database demo: cleanup confirmed, table deletion rejected, backups blocked, false migration caught', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oar-demo-db-'));
     const demo = await oar(['demo', dir, '--database', '--offline']);
