@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.5.0)
+## 0.5.0 (18 November 2026)
 
 - **Authority set and the re-check at commit** (SPEC section 4.5): a decision record can carry `authorities`, the
   outside artifacts it relied on (an AAuth or x401 token, an OAuth grant, a session, a mandate, an approval
@@ -15,6 +15,8 @@
   `authority-revoked.json`, `authority-not-rechecked.json` and `authority-stale.json`.
 - **Outcome classes** (SPEC section 6): every action is also reported as `committed`, `refused` or `unresolved`,
   so a relying party can tell what is known to have happened. `outcomeClass()` and `outcome_class()`.
+- **Maintainers:** the project is maintained by the Open Action Record authors; security and conduct reports go
+  through GitHub's private reporting.
 - **Specification:** reason code `authority_conflict`; composing with other protocols (section 12.1) and relying
   on an OAR record (section 12.2).
 
