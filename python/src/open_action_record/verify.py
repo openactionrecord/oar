@@ -11,7 +11,7 @@ from typing import Any
 from .canonical import digest, signature_ok
 from .timestamp import TimestampResult, anchor_digest, verify_timestamp_token
 
-CHECKS = ("issuer_signature", "seal", "chain", "checkpoint", "disclosures", "timestamp", "approval")
+CHECKS = ("issuer_signature", "seal", "chain", "checkpoint", "disclosures", "timestamp", "approval", "authority")
 LABELS = {
     "issuer_signature": "Issuer signature",
     "seal": "Seal",
@@ -20,6 +20,7 @@ LABELS = {
     "disclosures": "Disclosures",
     "timestamp": "Outside timestamp",
     "approval": "Approval binding",
+    "authority": "Authority",
 }
 LEVELS = ("issuer-signed", "sealed", "timestamped")
 LEVEL_LABELS = {
@@ -111,7 +112,7 @@ def verify_bundle(bundle: Any, *, keys: dict | None = None, tsa_roots: list[dict
             agent_id=str(p.get("agent_id", "unknown")),
             phase=str(p.get("phase", "")),
             outcome=str(p.get("result", "")),
-            checks={"issuer_signature": "fail", "seal": "fail", "chain": "not_checked", "checkpoint": "not_checked", "disclosures": "not_checked", "timestamp": "not_checked", "approval": "not_checked"},
+            checks={"issuer_signature": "fail", "seal": "fail", "chain": "not_checked", "checkpoint": "not_checked", "disclosures": "not_checked", "timestamp": "not_checked", "approval": "not_checked", "authority": "not_checked"},
         )
         sig = record.get("issuer_sig") or {}
         if sig.get("alg") == "EdDSA" and signature_ok(issuer_keys, sig.get("kid", ""), p, sig.get("sig", "")):
@@ -144,6 +145,13 @@ def verify_bundle(bundle: Any, *, keys: dict | None = None, tsa_roots: list[dict
     ts_failed, ts_messages, stamp = _check_timestamps(entries, b["checkpoints"], sealer_keys, partial, tsa_roots)
     messages += ts_messages
     messages += _check_disclosures(entries, b["disclosures"])
+
+    payloads = {e.record["payload"].get("receipt_id"): e.record["payload"] for e in entries if isinstance(e.record.get("payload"), dict)}
+    for e in entries:
+        problems = check_authority(e.record["payload"], payloads) if isinstance(e.record.get("payload"), dict) else None
+        if problems is not None:
+            e.report.checks["authority"] = "fail" if problems else "pass"
+            e.report.messages += problems
 
     failed_checks: list[str] = []
     lowest = 2
@@ -355,6 +363,87 @@ def check_approval(p: dict) -> list[str] | None:
     return problems
 
 
+AUTHORITY_STATUSES = ("valid", "expired", "revoked", "invalid", "unknown")
+
+
+def _time(value: Any) -> float | None:
+    from datetime import datetime
+
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
+def authority_set_digest(authorities: list) -> str:
+    """SPEC.md section 4.5: the digest an execution record's authority_check names."""
+    return digest({"v": 1, "purpose": "oar.authorities", "authorities": authorities})
+
+
+def _with_authorities(p: dict | None, by_id: dict) -> dict | None:
+    for _ in range(16):
+        if p is None:
+            return None
+        if p.get("authorities") is not None:
+            return p
+        p = by_id.get(p.get("decision_ref"))
+    return None
+
+
+def check_authority(p: dict, by_id: dict) -> list[str] | None:
+    """Check 8: problems with a record's authority set or its re-check at commitment; None when nothing to check."""
+    problems: list[str] = []
+    checked = False
+    auths = p.get("authorities")
+    if auths is not None:
+        checked = True
+        set_problems: list[str] = []
+        if not isinstance(auths, list) or not auths:
+            set_problems.append("The authority set is malformed: it must be a non-empty list.")
+        else:
+            for i, a in enumerate(auths, 1):
+                if not isinstance(a, dict) or not isinstance(a.get("type"), str) or not a.get("type") or not isinstance(a.get("issuer"), str) or not a.get("issuer") or not _is_digest(a.get("digest")) or _time(a.get("checked_at")) is None or a.get("status") not in AUTHORITY_STATUSES:
+                    set_problems.append(f"Authority {i} is malformed: it needs type, issuer, a sha256 digest, checked_at and a status.")
+                    continue
+                nb, ex, at = a.get("not_before"), a.get("expires_at"), _time(a["checked_at"])
+                if (nb is not None and _time(nb) is None) or (ex is not None and _time(ex) is None):
+                    set_problems.append(f"Authority {i} has an invalid validity window.")
+                elif a["status"] == "valid" and ex is not None and _time(ex) <= at:
+                    set_problems.append(f"Authority {i} is recorded as valid, but it had expired when it was checked.")
+                elif a["status"] == "valid" and nb is not None and _time(nb) > at:
+                    set_problems.append(f"Authority {i} is recorded as valid, but it was not yet valid when it was checked.")
+        problems += set_problems
+        if not set_problems and p.get("result") in ("allowed", "approved") and any(a.get("status") != "valid" for a in auths):
+            problems.append(f"The action was {p['result']}, but not every authority it relied on was valid.")
+    if p.get("phase") == "execution":
+        src = _with_authorities(by_id.get(p.get("decision_ref")), by_id) if p.get("decision_ref") else None
+        c = p.get("authority_check")
+        if c is not None:
+            checked = True
+            if not isinstance(c, dict) or _time(c.get("checked_at")) is None or not _is_digest(c.get("set_digest")) or c.get("result") not in ("current", "changed"):
+                problems.append("The authority check is malformed.")
+            elif not src:
+                problems.append("The authority check names no authority set: no earlier record of this action carries one.")
+            else:
+                if authority_set_digest(src["authorities"]) != c["set_digest"]:
+                    problems.append("The authority check covers a different authority set than the decision relied on.")
+                if c["result"] == "current":
+                    at = _time(c["checked_at"])
+                    stale = next((i for i, a in enumerate(src["authorities"], 1) if a.get("expires_at") is not None and (_time(a["expires_at"]) or 0) <= at), None)
+                    if stale:
+                        problems.append(f"The authority check says every authority was current, but authority {stale} had expired by then.")
+                    if p.get("result") == "refused":
+                        problems.append("The authority check says every authority was current, but the action was recorded as refused.")
+                elif p.get("result") != "refused":
+                    problems.append("An authority changed before the action committed, but the action was not recorded as refused.")
+        elif src and p.get("result") == "executed":
+            checked = True
+            problems.append("The action ran without its authority set being checked again at the moment it committed.")
+    return problems if checked else None
+
+
 def _check_disclosures(entries, disclosures) -> list[str]:
     messages: list[str] = []
     by_id = {e.report.receipt_id: e for e in entries}
@@ -383,6 +472,15 @@ def _check_disclosures(entries, disclosures) -> list[str]:
             e.report.checks["disclosures"] = "fail"
             e.report.messages.append(f"The disclosed {str(d.get('field', '')).replace('_', ' ')} details do not match the record.")
     return messages
+
+
+def outcome_class(outcome: str) -> str:
+    """committed, refused or unresolved (SPEC.md section 6)."""
+    if outcome == "confirmed":
+        return "committed"
+    if outcome in ("denied", "rejected", "expired", "refused"):
+        return "refused"
+    return "unresolved"
 
 
 def outcomes(bundle: Any) -> list[str]:
@@ -415,7 +513,7 @@ def outcomes(bundle: Any) -> list[str]:
         if conf:
             result.append("confirmed" if conf["result"] == "confirmed" else "not_confirmed")
         elif exe:
-            result.append("executed_unconfirmed" if exe["result"] == "executed" else "failed")
+            result.append({"executed": "executed_unconfirmed", "refused": "refused"}.get(exe["result"], "failed"))
         elif appr:
             result.append({"rejected": "rejected", "expired": "expired"}.get(appr["result"], "approved_not_executed"))
         elif dec and dec["result"] == "denied":

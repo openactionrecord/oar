@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
+import { AUTHORITY_STATUSES, authoritySetDigest, type Authority, type AuthorityStatus } from './authority.js';
 import { bindingChallenge, bindingDigest, type ApprovalBinding, type ApprovalEvidence, type BoundDecision } from './approval.js';
 import { commitmentFor } from './crypto/commitment.js';
 import { canonicalDigest, isSha256Digest, sha256Hex } from './crypto/hash.js';
@@ -67,9 +68,25 @@ export interface ActionInput {
   external?: ExternalRef;
 }
 
+export interface AuthorityInput {
+  /** The kind of artifact: "aauth", "x401", "poppy", "oauth-rar", "sim-check", "mandate" and so on. */
+  type: string;
+  /** Who issued it. Not personal data. */
+  issuer: string;
+  /** The artifact itself (its digest is recorded; keep it to disclose it), or its "sha256:<hex>" digest. */
+  artifact?: string | Uint8Array;
+  digest?: string;
+  notBefore?: string;
+  expiresAt?: string;
+  /** What the receiver found when it checked it. Default "valid". */
+  status?: AuthorityStatus;
+}
+
 export interface DecideInput extends ActionInput {
   result: 'allowed' | 'held' | 'denied';
   reasons?: string[];
+  /** The outside artifacts this decision relied on (SPEC.md section 4.5). Checked again at execution. */
+  authorities?: AuthorityInput[];
   /** False to record without enforcing (observe mode). Default true. */
   enforced?: boolean;
 }
@@ -82,7 +99,7 @@ export interface ActionHandle {
   readonly instanceCommitment: string;
   /** The last record written for this action. */
   lastRecordId: string;
-  status: 'allowed' | 'held' | 'denied' | 'approved' | 'rejected' | 'executed' | 'failed' | 'confirmed' | 'not_confirmed';
+  status: 'allowed' | 'held' | 'denied' | 'approved' | 'rejected' | 'executed' | 'failed' | 'refused' | 'confirmed' | 'not_confirmed';
 }
 
 export interface ApproveInput {
@@ -123,6 +140,11 @@ export interface ExecuteInput {
   /** False when the change failed. Default true. */
   ok?: boolean;
   reasons?: string[];
+  /**
+   * Required when the decision relied on authorities: the result of checking them again just before the action
+   * commits. Any status other than "valid" records the action as refused, and nothing runs.
+   */
+  authorityCheck?: { statuses: AuthorityStatus[] };
 }
 
 export interface ConfirmInput {
@@ -185,7 +207,7 @@ export class Recorder {
   private readonly secrets: DisclosureInput[] = [];
   private readonly actions = new Map<
     string,
-    { handle: ActionHandle; principal: string; targetRef?: string; external?: ExternalRef; request?: { approvalId: string; display?: string; binding: ApprovalBinding }[] }
+    { handle: ActionHandle; principal: string; targetRef?: string; external?: ExternalRef; authorities?: Authority[]; request?: { approvalId: string; display?: string; binding: ApprovalBinding }[] }
   >();
   private queue: Promise<unknown> = Promise.resolve();
   private lastIssuedAt = 0;
@@ -216,6 +238,7 @@ export class Recorder {
       const instance = this.commit(id, 'instance', instanceValue);
       const usage = input.usage === undefined ? undefined : this.commit(id, 'consumption', input.usage);
       const reasons = input.reasons ?? [input.result === 'allowed' ? 'within_limits' : input.result === 'held' ? 'needs_approval' : 'over_limit'];
+      const authorities = input.authorities === undefined ? undefined : input.authorities.map((a) => this.toAuthority(a));
       await this.write({
         receipt_id: id,
         phase: 'decision',
@@ -228,9 +251,10 @@ export class Recorder {
         reasons,
         enforced: input.enforced ?? true,
         ...(input.external ? { external_ref: checkExternal(input.external) } : {}),
+        ...(authorities ? { authorities } : {}),
       });
       const handle: ActionHandle = { id, type: input.type, target: input.target, instanceCommitment: instance, lastRecordId: id, status: input.result };
-      this.actions.set(id, { handle, principal: this.policyPrincipal, ...(input.external ? { external: input.external } : {}) });
+      this.actions.set(id, { handle, principal: this.policyPrincipal, ...(input.external ? { external: input.external } : {}), ...(authorities ? { authorities } : {}) });
       return handle;
     });
   }
@@ -311,7 +335,18 @@ export class Recorder {
       if (state.handle.status !== 'allowed' && state.handle.status !== 'approved') {
         throw new Error(`Only an allowed or approved action can be executed (this one is ${state.handle.status}).`);
       }
-      const ok = input.ok ?? true;
+      let ok = input.ok ?? true;
+      let check: { checked_at: string; set_digest: string; result: 'current' | 'changed'; changes?: { index: number; status: AuthorityStatus }[] } | undefined;
+      if (state.authorities) {
+        const statuses = input.authorityCheck?.statuses;
+        if (!statuses || statuses.length !== state.authorities.length || statuses.some((s) => !AUTHORITY_STATUSES.includes(s))) {
+          throw new Error(`This action relied on ${state.authorities.length} authorities: pass authorityCheck.statuses with one status each, checked just now.`);
+        }
+        const changes = statuses.map((status, index) => ({ index, status })).filter((c) => c.status !== 'valid');
+        check = { checked_at: this.stamp(), set_digest: authoritySetDigest(state.authorities), result: changes.length ? 'changed' : 'current', ...(changes.length ? { changes } : {}) };
+      }
+      const refused = check?.result === 'changed';
+      if (refused) ok = false;
       const id = this.newId();
       const before = input.before === undefined ? undefined : this.commit(id, 'state_before', input.before);
       const after = input.after === undefined ? undefined : this.commit(id, 'state_after', input.after);
@@ -322,17 +357,18 @@ export class Recorder {
         action: { type: state.handle.type, target: state.handle.target },
         instance_commitment: state.handle.instanceCommitment,
         principal: state.principal,
-        result: ok ? 'executed' : 'failed',
-        reasons: input.reasons ?? [ok ? 'executed' : 'execution_failed'],
+        result: refused ? 'refused' : ok ? 'executed' : 'failed',
+        reasons: input.reasons ?? [refused ? authorityReason(check!.changes!) : ok ? 'executed' : 'execution_failed'],
         enforced: true,
         decision_ref: state.handle.lastRecordId,
         ...(target ? { target_ref_commitment: target } : {}),
         ...(before ? { state_before_commitment: before } : {}),
         ...(after ? { state_after_commitment: after } : {}),
+        ...(check ? { authority_check: check } : {}),
       });
       if (input.targetRef !== undefined) state.targetRef = input.targetRef;
       state.handle.lastRecordId = id;
-      state.handle.status = ok ? 'executed' : 'failed';
+      state.handle.status = refused ? 'refused' : ok ? 'executed' : 'failed';
       return record;
     });
   }
@@ -466,6 +502,23 @@ export class Recorder {
     return new Date(t).toISOString();
   }
 
+  private toAuthority(a: AuthorityInput): Authority {
+    if (!a?.type || !a.issuer) throw new TypeError('authorities: each needs { type, issuer, artifact or digest }');
+    const digest = a.digest ?? (a.artifact !== undefined ? `sha256:${sha256Hex(a.artifact)}` : undefined);
+    if (!isSha256Digest(digest)) throw new TypeError('authorities: give the artifact, or its digest as "sha256:<hex>"');
+    const status = a.status ?? 'valid';
+    if (!AUTHORITY_STATUSES.includes(status)) throw new TypeError(`authorities: unknown status "${status}"`);
+    return {
+      type: a.type,
+      issuer: a.issuer,
+      digest,
+      ...(a.notBefore ? { not_before: a.notBefore } : {}),
+      ...(a.expiresAt ? { expires_at: a.expiresAt } : {}),
+      checked_at: this.stamp(),
+      status,
+    };
+  }
+
   /** Several requests for one approval share its record id; keep only the display opening of the one used. */
   private dropUnusedDisplays(requests: { approvalId: string; display?: string }[], used: { display?: string }): void {
     const unused = new Set(requests.map((r) => r.display).filter((d): d is string => d !== undefined && d !== used.display));
@@ -513,7 +566,7 @@ function sortPayload(p: Payload): Payload {
   const order: (keyof Payload)[] = [
     'aar_version', 'receipt_id', 'phase', 'org_id', 'agent_id', 'run_id', 'action', 'instance_commitment', 'authorization_ref', 'principal',
     'approval', 'consumption_commitment', 'result', 'reasons', 'enforced', 'decision_ref', 'target_ref_commitment',
-    'state_before_commitment', 'state_after_commitment', 'external_ref', 'issued_at', 'prev_receipt_hash',
+    'state_before_commitment', 'state_after_commitment', 'external_ref', 'authorities', 'authority_check', 'issued_at', 'prev_receipt_hash',
   ];
   const out: Record<string, unknown> = {};
   for (const key of order) if (p[key] !== undefined) out[key] = p[key];
@@ -529,6 +582,12 @@ function validateAction(input: ActionInput): void {
 function checkExternal(ref: ExternalRef): ExternalRef {
   if (!ref.format || !isSha256Digest(ref.digest)) throw new TypeError('external: expected { format, digest: "sha256:<hex>" }');
   return { format: ref.format, digest: ref.digest, ...(ref.id ? { id: ref.id } : {}) };
+}
+
+function authorityReason(changes: { status: AuthorityStatus }[]): string {
+  if (changes.some((c) => c.status === 'revoked')) return 'authority_revoked';
+  if (changes.some((c) => c.status === 'expired')) return 'authority_expired';
+  return 'authority_invalid';
 }
 
 function toEvidence(input: ApproveInput['evidence']): ApprovalEvidence {

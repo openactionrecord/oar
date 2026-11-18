@@ -1,4 +1,5 @@
 import { checkApproval } from './approval.js';
+import { checkAuthority } from './authority.js';
 import { verifyCommitment } from './crypto/commitment.js';
 import type { Jwks } from './crypto/keys.js';
 import {
@@ -21,7 +22,7 @@ import { TSA_ROOTS, type TsaRoot } from './timestamp/tsa-roots.js';
 // Records may be issuer-signed only (no sealing service). They still verify, at a lower evidence level, unless
 // `requireSeal` is set. Every report states the level it reached, so a stripped seal cannot pass unnoticed.
 
-export type CheckName = 'issuer_signature' | 'seal' | 'chain' | 'checkpoint' | 'disclosures' | 'timestamp' | 'approval';
+export type CheckName = 'issuer_signature' | 'seal' | 'chain' | 'checkpoint' | 'disclosures' | 'timestamp' | 'approval' | 'authority';
 export type CheckResult = 'pass' | 'fail' | 'not_checked';
 
 export const CHECK_LABELS: Record<CheckName, string> = {
@@ -32,6 +33,7 @@ export const CHECK_LABELS: Record<CheckName, string> = {
   disclosures: 'Disclosures',
   timestamp: 'Outside timestamp',
   approval: 'Approval binding',
+  authority: 'Authority',
 };
 
 export type DisclosureField = 'instance' | 'consumption' | 'target_ref' | 'state_before' | 'state_after' | 'display';
@@ -136,7 +138,7 @@ export function verify(
       receiptId: String(envelope.payload?.receipt_id ?? 'unknown'),
       agentId: String(envelope.payload?.agent_id ?? 'unknown'),
       ...(envelope.seal ? { seq: envelope.seal.seq } : {}),
-      checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked', approval: 'not_checked' },
+      checks: { issuer_signature: 'fail', seal: 'fail', chain: 'not_checked', checkpoint: 'not_checked', disclosures: 'not_checked', timestamp: 'not_checked', approval: 'not_checked', authority: 'not_checked' },
       result: 'pass',
       level: 'issuer-signed',
       messages: [],
@@ -170,6 +172,16 @@ export function verify(
 
     return { envelope, report, sealValid };
   });
+
+  // Check 8: authority sets and their re-check at commitment, which need the other records of the action.
+  const byId = new Map(entries.filter((e) => e.envelope.payload).map((e) => [e.envelope.payload.receipt_id, e.envelope.payload]));
+  for (const e of entries) {
+    const problems = e.envelope.payload ? checkAuthority(e.envelope.payload, byId) : undefined;
+    if (problems) {
+      e.report.checks.authority = problems.length ? 'fail' : 'pass';
+      e.report.messages.push(...problems);
+    }
+  }
 
   checkChains(entries, options);
 

@@ -75,7 +75,7 @@ OAR does not define how agents are built or how rules are written. It records wh
 | `principal` | yes | Who decided: `"policy:<id>"`, or `"approver:<ref>"` for a person. |
 | `approval` | no | `{ "method": "standing_mandate" \| "button" \| "passkey" \| "external", "approver"?, "at", "assertion_digest"?, "display_commitment"?, "binding"?, "evidence"? }` (section 4.3) |
 | `consumption_commitment` | no | Commitment to limit usage at decision time (for example, money used today before and after). |
-| `result` | yes | Decision: `allowed`, `held`, `denied`. Approval: `approved`, `rejected`, `expired`. Execution: `executed`, `failed`. Confirmation: `confirmed`, `not_confirmed`. |
+| `result` | yes | Decision: `allowed`, `held`, `denied`. Approval: `approved`, `rejected`, `expired`. Execution: `executed`, `failed`, `refused` (section 4.5). Confirmation: `confirmed`, `not_confirmed`. |
 | `reasons` | yes | Reason codes (section 7). |
 | `enforced` | yes | `false` when the decision was recorded but not applied (observe mode). |
 | `decision_ref` | no | Approval, execution and confirmation records: the `receipt_id` of the record this one follows. |
@@ -83,6 +83,8 @@ OAR does not define how agents are built or how rules are written. It records wh
 | `state_before_commitment` | no | Execution: commitment to the affected state, read just before the change. |
 | `state_after_commitment` | no | Execution: commitment to the same state, read just after. |
 | `external_ref` | no | `{ "format", "digest", "id"? }`: a receipt in another format that this record adds evidence to (section 4.4). |
+| `authorities` | no | Decision: the outside artifacts the decision relied on, each with its digest, validity window and status when checked (section 4.5). |
+| `authority_check` | no | Execution: the authority set checked again just before the action committed (section 4.5). |
 | `issued_at` | yes | RFC 3339 UTC. |
 | `prev_receipt_hash` | no | `D(previous record of the same agent, including its seal)`. Absent only on an agent's first record. |
 
@@ -92,7 +94,7 @@ Payloads MUST NOT contain amounts, addresses, email addresses, customer identifi
 
 1. **Decision**: `allowed`, `held` or `denied`, with reasons and the rules digest.
 2. Optional **approval** (phase `decision`): `approved` or `rejected` by a named approver, or `expired`. `decision_ref` names the held decision.
-3. **Execution**: `executed`, with `target_ref_commitment`, `state_before_commitment` and `state_after_commitment` where available, or `failed`. If the operator's own system ran the action, the issuer records its report the same way.
+3. **Execution**: `executed`, with `target_ref_commitment`, `state_before_commitment` and `state_after_commitment` where available, or `failed`, or `refused` when an authority the decision relied on changed before the action committed (section 4.5). If the operator's own system ran the action, the issuer records its report the same way.
 4. **Confirmation**: the issuer (or another party) reads the system of record, read-only, and records `confirmed`, or `not_confirmed` with reason `outcome_missing` or `outcome_mismatch`. `decision_ref` names the execution record.
 
 A `not_confirmed` result MUST be recorded as well. A missing confirmation is itself a signal, and verifiers SHOULD report it.
@@ -156,6 +158,44 @@ Agent tool calls may already be recorded in another format (a signed decision re
 
 The OAR records of the action then bind to that receipt. A verifier holding the other receipt checks that its digest matches.
 
+### 4.5 Authority set and the re-check at commit
+
+An agent action often relies on artifacts from outside the issuer: a delegated authorization (for example an AAuth or x401 token), an OAuth grant with authorization details (RFC 9396), a session, a payment mandate, a SIM or device check, or an outside approval service's result. Each can expire or be revoked between the moment the action is decided and the moment it commits. OAR binds those artifacts to the one action and records that they were checked again when it committed.
+
+**At decision.** The decision record MAY carry `authorities`, a non-empty list:
+
+```json
+"authorities": [
+  { "type": "aauth", "issuer": "https://auth.example", "digest": "sha256:<hex of the artifact's bytes, exactly as received>",
+    "not_before": "2026-11-18T14:00:00Z", "expires_at": "2026-11-18T14:15:00Z",
+    "checked_at": "2026-11-18T14:02:11Z", "status": "valid" }
+]
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `type` | yes | The kind of artifact, for example `aauth`, `x401`, `oauth-rar`, `session`, `mandate`, `sim-check`. Implementations MAY add types; verifiers treat them as opaque. |
+| `issuer` | yes | Who issued it: a URL, domain or other stable identifier. Not personal data. |
+| `digest` | yes | `sha256:<hex>` of the artifact's bytes exactly as received. The artifact itself is not in the record. |
+| `not_before`, `expires_at` | no | The artifact's own validity window, RFC 3339 UTC. |
+| `checked_at` | yes | When the issuer checked it, RFC 3339 UTC. |
+| `status` | yes | What the check found: `valid`, `expired`, `revoked`, `invalid` or `unknown`. |
+
+A decision with result `allowed`, or an approval with result `approved`, MUST NOT rely on an authority whose status is not `valid`. An authority recorded as `valid` MUST be inside its own validity window at `checked_at`. The record's signature covers the list, so the set cannot be changed later without the change showing.
+
+**At commit.** Just before the action commits, the issuer checks every authority in the set again and records the result on the execution record:
+
+```json
+"authority_check": { "checked_at": "2026-11-18T14:04:02Z", "set_digest": "sha256:<hex>", "result": "current" }
+```
+
+- `set_digest` is `D({ v: 1, purpose: "oar.authorities", authorities })` over the decision's list, so the check names exactly the set it covers. The set is taken from the nearest record of the action, following `decision_ref` back, that carries `authorities`.
+- `result` `current`: every authority was still valid at `checked_at`. The execution result is then `executed` or `failed`.
+- `result` `changed`: at least one authority had expired, been revoked or become invalid. The action MUST NOT run, the execution result is `refused`, and `changes` MAY list which ones: `[{ "index": <position in the set, from 0>, "status": <new status> }]`. The reason code is `authority_revoked`, `authority_expired` or `authority_invalid` (section 7).
+- An action whose decision carries `authorities` MUST NOT be recorded as `executed` without an `authority_check`.
+
+The re-check is the issuer's own check of each artifact (a token introspection, a revocation list, a session lookup, a call to the approval service). OAR records what was checked, when, and with what result; it does not define how each kind of artifact is checked. If an authority cannot be checked at commit (its issuer cannot be reached), the action fails closed: it is `refused`, with reason `authority_invalid` or `system_unavailable`.
+
 ## 5. Sealing service, log and checkpoints (optional)
 
 A record without a seal is **issuer-signed**: any later change to it shows, but the issuer could rewrite its own history. A sealing service closes that gap.
@@ -186,7 +226,7 @@ A timestamp proves when a record existed, not that it was true when it was made.
 
 ## 6. Verification
 
-Inputs: the records, the disclosures given (optional), the checkpoints, the issuer's and the sealer's public keys, and the root certificates accepted for outside timestamps. Verifiers report seven checks per record: `pass`, `fail` or `not_checked`.
+Inputs: the records, the disclosures given (optional), the checkpoints, the issuer's and the sealer's public keys, and the root certificates accepted for outside timestamps. Verifiers report eight checks per record: `pass`, `fail` or `not_checked`.
 
 1. **Issuer signature**: `issuer_sig.alg` is `EdDSA` and the signature verifies over `JCS(payload)` with the issuer key `kid`.
 2. **Seal**: the seal verifies over `JCS({ digest: D(payload), seq, sealed_at })` with the sealer key. A record without a seal is `not_checked` (level `issuer-signed`) unless the verifier requires seals, in which case it fails.
@@ -195,10 +235,21 @@ Inputs: the records, the disclosures given (optional), the checkpoints, the issu
 5. **Disclosures**: for each disclosure, `D({ salt, value })` equals the record's commitment for that field (`instance`, `consumption`, `target_ref`, `state_before`, `state_after`, and `display` for `approval.display_commitment`).
 6. **Outside timestamp**: take the first checkpoint with a valid sealer signature and an `anchors` entry whose `count` covers the record's `seq`. Its token passes when its message imprint equals the anchor digest; the `messageDigest` signed attribute equals the hash of the TSTInfo; the signature over the signed attributes verifies with the signer certificate (RSA PKCS#1 v1.5 or ECDSA); the signer certificate has the `timeStamping` extended key usage and was valid at `genTime`; and its chain reaches an accepted root. For a complete set, the records must also recompute that checkpoint's `head_digest`. Revocation is not checked.
 7. **Approval binding**: for a record whose `approval` carries `binding`, or whose method is `external`: `binding.v` is 2, `binding.nonce` is 64 lower-case hex characters, `decision_ref` is present, and recomputing the binding (section 4.3.1) from `decision_ref`, `instance_commitment`, `approval.display_commitment`, the nonce and `decision` gives `binding.digest`; `decision` `approve` requires result `approved`, and `reject` requires `rejected`; an `external` approval carries `binding` and `evidence` with `provider`, `format` and a `sha256` digest. Records with neither are `not_checked`.
+8. **Authority**: for a record that carries `authorities`: every entry has `type`, `issuer`, a `sha256` digest, `checked_at` and a known `status`; no entry recorded as `valid` is outside its own validity window at its `checked_at`; and a record with result `allowed` or `approved` has only `valid` entries. For an execution record that carries `authority_check`: an earlier record of the action carries `authorities`; recomputing the set digest gives `set_digest`; a `current` check names no authority that had expired by its `checked_at` and its record is not `refused`; a `changed` check has result `refused`. An execution with result `executed` whose action carries `authorities` but no `authority_check` fails. Records with neither are `not_checked`.
 
 The result is `pass` only if no check fails anywhere. Verifiers SHOULD let users supply keys obtained independently (for example from the published key sets) to rule out a substituted bundle.
 
-**Outcome.** Verifiers SHOULD also report each action's outcome from its records, grouping the records of one action by following `decision_ref` back to its first record: `confirmed`, `not_confirmed`, executed without confirmation, `failed`, held awaiting approval, approved without a recorded execution, `denied`, `rejected` or `expired`.
+**Outcome.** Verifiers SHOULD also report each action's outcome from its records, grouping the records of one action by following `decision_ref` back to its first record: `confirmed`, `not_confirmed`, executed without confirmation, `failed`, held awaiting approval, approved without a recorded execution, `denied`, `rejected`, `expired`, or `refused` (not run: an authority changed before it committed).
+
+**Outcome classes.** So that a relying party can act on an outcome without knowing every value, verifiers SHOULD also report one of three classes per action:
+
+| Class | Outcomes | Meaning |
+|---|---|---|
+| `committed` | `confirmed` | The action ran, and the system of record shows the change. |
+| `refused` | `denied`, `rejected`, `expired`, `refused` | The action did not run, and the records show why. |
+| `unresolved` | every other outcome | The records do not show that the change happened: held, approved without a recorded execution, `failed`, executed without confirmation, or `not_confirmed`. |
+
+Only `committed` means the change is known to have happened. A relying party SHOULD treat `unresolved` as not done until a later record resolves it.
 
 ## 7. Reason codes
 
@@ -218,6 +269,10 @@ Reason codes are short, stable strings in `snake_case`, for example `within_limi
 | `rules_changed_since_decision` | The rules changed between the decision and the execution, so the action was checked again. |
 | `override_by_person` | A person allowed an action that the rules alone would have denied. |
 | `outcome_differs_from_approval` | What changed in the system of record differs from what the person approved. |
+| `authority_revoked` | An authority the decision relied on was revoked before the action committed, so it did not run (section 4.5). |
+| `authority_expired` | An authority the decision relied on expired before the action committed, so it did not run. |
+| `authority_invalid` | An authority the decision relied on was found invalid, or could not be checked, before the action committed, so it did not run. |
+| `authority_conflict` | Two authorities the action relied on disagree (for example, a mandate and an approval service), so the receiver's policy did not allow it. |
 
 ## 8. Bundles
 
@@ -250,6 +305,7 @@ An implementation conforms when it reaches the expected result on every case in 
 - **Withholding**: a verifier given a subset cannot detect records left out beyond the checkpoint count; complete bundles can.
 - **Time**: times are claims of the issuer and sealer; an outside timestamp bounds them from above.
 - **Timestamp authority**: verifiers trust their configured roots. Revocation is not checked; a compromised authority could backdate tokens.
+- **Authorities**: records hold digests of outside artifacts, not the artifacts. A verifier can check that a given artifact is the one the decision relied on, but trusts the issuer's record of each status. The re-check at commit narrows the window in which a revoked authority could still be used to the time between `authority_check.checked_at` and the commit itself; issuers SHOULD keep that window short and SHOULD record the check as close to the commit as their systems allow.
 - **Substituted bundles**: keys inside a bundle are a convenience. Verifiers SHOULD let users check against independently obtained keys.
 
 ## 11. Privacy considerations
@@ -271,8 +327,29 @@ Whether a commitment whose opening still exists is personal data depends on who 
 
 OAR is a domain profile for agent actions. Its sealing service, signed statements and checkpoints follow the shape of the IETF SCITT architecture (RFC 9943): signed statements registered with a transparency service that returns receipts. The approval and outcome evidence (sections 4.2 to 4.4) is designed to be added to other agent receipt formats rather than replace them. A COSE encoding and a SCITT registration profile are planned.
 
+### 12.1 Composing with other protocols
+
+Protocols for agent identity and authorization (for example AAuth, x401 and OAuth 2.0 Rich Authorization Requests, RFC 9396) answer whether an agent may ask. Approval services answer whether a person agreed. OAR does not replace them: it records which of their artifacts one action relied on, and what each said when the action was decided and again when it committed (section 4.5). Two joins make this work:
+
+1. **Authority to action**, at decision: the signed decision record binds the digest of each outside artifact to the one action instance (`instance_commitment`).
+2. **Action to outcome**, at commit and after: the execution record binds the re-check to that set (`set_digest`), and the confirmation binds the action to what the system of record shows.
+
+When several authorities apply and disagree, which one wins is the receiver's policy, not part of this format. The record shows the authorities, their statuses and the result, so the policy that was applied can be checked afterwards; a conflict the policy did not allow is recorded with `authority_conflict`.
+
+### 12.2 Relying on an OAR record
+
+A party that receives an OAR bundle (an auditor, an insurer, a payment network, a bank's fraud team) SHOULD:
+
+- verify the bundle against keys it obtained independently (section 10);
+- act on the outcome class (section 6), treating only `committed` as done;
+- for an action that relied on outside authorities, check that the execution carries an `authority_check` with result `current`, and, where it holds an artifact, that the artifact's digest is in the set;
+- for an approval, check the binding (check 7), and open `display` only where it needs to see what the approver was shown.
+
+A verified record shows what the issuer recorded and that it has not been changed since. It does not show that the issuer's checks were correct; that rests on the issuer, the sealing service and the other evidence in section 10.
+
 ## 13. Changes
 
-- **Since 0.3 (November 2026, draft)**: approval binding version 2, what the approver was shown, and approvals by an outside service (section 4.3.1, check 7); common reason codes (section 7); optional bundle field `retention` and the rule that verifiers ignore unknown bundle fields (section 8); retention and erasure (section 11.1). Records still carry `aar_version` `"0.3"`; the new fields are optional, and verifiers that predate them ignore them. A mapping to rules in the EU, the US and Canada is in `docs/REGULATORY-MAPPING.md`.
+- **Since 0.4 (November 2026, draft)**: authority set and the re-check at commit (section 4.5, check 8); execution result `refused`; outcome classes `committed`, `refused` and `unresolved` (section 6); reason codes `authority_revoked`, `authority_expired`, `authority_invalid` and `authority_conflict` (section 7); composing with other protocols and relying on a record (sections 12.1 and 12.2). The new fields are optional; records still carry `aar_version` `"0.3"`.
+- **0.4 (November 2026, draft)**: approval binding version 2, what the approver was shown, and approvals by an outside service (section 4.3.1, check 7); common reason codes (section 7); optional bundle field `retention` and the rule that verifiers ignore unknown bundle fields (section 8); retention and erasure (section 11.1). Records still carry `aar_version` `"0.3"`; the new fields are optional, and verifiers that predate them ignore them. A mapping to rules in the EU, the US and Canada is in `docs/REGULATORY-MAPPING.md`.
 - **0.3 (October 2026, first public draft)**: `state_before_commitment` and `state_after_commitment`; the `confirmation` phase; outside timestamps on checkpoints; `external_ref`; the issuer-signed profile and evidence levels; bundle format `oar-bundle/0.1`.
 - **0.2-mvp**: decision, approval and execution records; commitments; chain; sealing service and checkpoints; evidence packages (`aar-evidence/0.1`).

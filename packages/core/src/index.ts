@@ -51,6 +51,7 @@ export {
   type ActionHandle,
   type ApproveInput,
   type ApprovalRequest,
+  type AuthorityInput,
   type ApprovalRequestInput,
   type ExecuteInput,
   type ConfirmInput,
@@ -72,4 +73,5 @@ export {
 } from './sealer.js';
 export { anchorDigest, verifyTimestampToken, type TimestampResult } from './timestamp/timestamp.js';
 export { TSA_ROOTS, type TsaRoot } from './timestamp/tsa-roots.js';
-export { summarize, actionKey, OUTCOME_LABELS, type ActionSummary, type ActionStep, type Outcome } from './summary.js';
+export { summarize, actionKey, outcomeClass, OUTCOME_LABELS, type ActionSummary, type ActionStep, type Outcome, type OutcomeClass } from './summary.js';
+export { authoritySetDigest, checkAuthority, AUTHORITY_PURPOSE, AUTHORITY_STATUSES, type Authority, type AuthorityCheck, type AuthorityStatus } from './authority.js';

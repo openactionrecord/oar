@@ -1,6 +1,7 @@
 import { canonicalDigest } from './crypto/hash.js';
 import { findPublicKey, signCanonical, verifyCanonical, type Jwks, type SigningKey } from './crypto/keys.js';
 import type { ApprovalBinding, ApprovalEvidence } from './approval.js';
+import type { Authority, AuthorityCheck } from './authority.js';
 
 // Open Action Record (OAR), version 0.3. See SPEC.md.
 //
@@ -29,6 +30,8 @@ export type RecordResult =
   /** Execution records. */
   | 'executed'
   | 'failed'
+  /** Execution records: the authority re-check at commitment found a change, so nothing ran (SPEC.md section 4.5). */
+  | 'refused'
   /** Confirmation records: the system of record shows what the execution record says, or it does not. */
   | 'confirmed'
   | 'not_confirmed';
@@ -90,6 +93,10 @@ export interface Payload {
   state_after_commitment?: string;
   /** Optional: the receipt in another format that this record adds evidence to. */
   external_ref?: ExternalRef;
+  /** Decision records: the outside artifacts the decision relied on (SPEC.md section 4.5). */
+  authorities?: Authority[];
+  /** Execution records: the authority set checked again just before the action committed. */
+  authority_check?: AuthorityCheck;
   issued_at: string;
   /** Hash of this agent's previous record. Omitted on the agent's first record. */
   prev_receipt_hash?: string;

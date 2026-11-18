@@ -1,0 +1,160 @@
+{
+  "format": "oar-bundle/0.1",
+  "generated_at": "2026-10-25T14:00:10.000Z",
+  "org": {
+    "id": "example-store",
+    "name": "Example Store (test vectors)"
+  },
+  "scope": {
+    "from": "2026-10-25T14:00:03.000Z",
+    "to": "2026-10-25T14:00:07.000Z",
+    "complete": true
+  },
+  "records": [
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:59dd4988-bbd0-4882-8da5-e226491bf9e6",
+        "phase": "decision",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "vendor_payout",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:4418f91418820c52b2bdc36892f21cf0feee68588e5fa8c0e43cd19b55eadd75",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "approval": {
+          "method": "standing_mandate",
+          "at": "2026-10-25T14:00:03.000Z"
+        },
+        "result": "allowed",
+        "reasons": [
+          "within_limits"
+        ],
+        "enforced": true,
+        "authorities": [
+          {
+            "type": "aauth",
+            "issuer": "https://person.example",
+            "digest": "sha256:06d5213f27c4b8bd5bbc138e0b8203ce86492a37d0c502599cdf499d31471ac0",
+            "expires_at": "2026-10-26T14:00:00Z",
+            "checked_at": "2026-10-25T14:00:01.000Z",
+            "status": "valid"
+          },
+          {
+            "type": "x401",
+            "issuer": "https://wallet.example",
+            "digest": "sha256:4fa0d4379fe177b05e428a5e6aa8b74f81d1b2761804daa69fa845a78a9b686e",
+            "checked_at": "2026-10-25T14:00:02.000Z",
+            "status": "valid"
+          }
+        ],
+        "issued_at": "2026-10-25T14:00:03.000Z"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "c677f762162b6608cd2535f29c05d9f95be8374f1fca7ff5c0ed5472d0c7be037833d82fee3eb60b0069f36d3ab230e1bac076d1c42df92196fe949197b7ae02"
+      },
+      "seal": {
+        "sealer_kid": "oar-test-sealer",
+        "seq": 1,
+        "sealed_at": "2026-10-25T14:00:04.000Z",
+        "sig": "a3948fb76f9a0126cd2a89174286cfc4aecb7ed15c4ce5ae4f8b984cfa8541a64d0fd9f8bf8e46c2cd758ba7a579d6678f143016ab92d8b32655e3fec84e980c"
+      }
+    },
+    {
+      "payload": {
+        "aar_version": "0.3",
+        "receipt_id": "urn:uuid:8c79913e-277e-493c-869f-54d6dbba88ca",
+        "phase": "execution",
+        "org_id": "example-store",
+        "agent_id": "support-agent",
+        "run_id": "run:test-1",
+        "action": {
+          "type": "vendor_payout",
+          "target": "payments"
+        },
+        "instance_commitment": "sha256:4418f91418820c52b2bdc36892f21cf0feee68588e5fa8c0e43cd19b55eadd75",
+        "authorization_ref": "sha256:fdc2c0574061a0831283c612eac45e1f95e20188b7c239fff3228824de038be8",
+        "principal": "policy:store-rules-v1",
+        "result": "refused",
+        "reasons": [
+          "authority_revoked"
+        ],
+        "enforced": true,
+        "decision_ref": "urn:uuid:59dd4988-bbd0-4882-8da5-e226491bf9e6",
+        "authority_check": {
+          "checked_at": "2026-10-25T14:00:06.000Z",
+          "set_digest": "sha256:f7c692f623982e2b084e0f7670d0ad8adc9be0ded95b692dd96622ad04e03ff5",
+          "result": "changed",
+          "changes": [
+            {
+              "index": 0,
+              "status": "revoked"
+            }
+          ]
+        },
+        "issued_at": "2026-10-25T14:00:07.000Z",
+        "prev_receipt_hash": "sha256:71230988ed545552b2e7cffaada7c2867aaaa57edf8e92fc68c9c5b4bf643e54"
+      },
+      "issuer_sig": {
+        "alg": "EdDSA",
+        "kid": "oar-test-issuer",
+        "sig": "c40f4a66a903b6a23656c882da67c829f7b4c6244b71da0f94f9e130d901cde598f3c21a275b18dd7ccb9503ca105c0558a6aeb27818817b3f2eafe179fd050d"
+      },
+      "seal": {
+        "sealer_kid": "oar-test-sealer",
+        "seq": 2,
+        "sealed_at": "2026-10-25T14:00:08.000Z",
+        "sig": "ac66db463a069c951341c0ca1e4ccadec38a00c8dc4db1c2a336b18811a8fbdee9c229a8af721cb9ad82e2a8b6fab58833b5f94e5b91d8ac0ef9092da32b7103"
+      }
+    }
+  ],
+  "disclosures": [],
+  "checkpoints": [
+    {
+      "count": 1,
+      "head_digest": "sha256:a883fe834b74eaee199fbabe4adae456473fc5d8d2f4a139829cf6323b4ff5db",
+      "at": "2026-10-25T14:00:05.000Z",
+      "sealer_kid": "oar-test-sealer",
+      "sig": "334c5454cea4cbbc0b1895659a2492dd5de7ea1e0294e929e0f12321578e562e02252053cf6b4edc7199148524fe608e579737019c2af05b3c26d0bd1526f406"
+    },
+    {
+      "count": 2,
+      "head_digest": "sha256:bf35cfea0e530a842dc283dd92cdb1969549eb92b1300a1acfa9b0461c16cd5b",
+      "at": "2026-10-25T14:00:09.000Z",
+      "sealer_kid": "oar-test-sealer",
+      "sig": "038c6c45e6889a3bdcbc6c186b4158f4ddac47b9ffdeb9aae6bbfc157c6acdb70bc69747e700d033f5a786d3c06fe3c5e4f8c1f2caf1d1987150e7dca17a5201"
+    }
+  ],
+  "keys": {
+    "issuer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "0EqyMnQrtKs6E2i9RhXk5tAiSrcaAWuvhSCjMsl3hzc",
+          "kid": "oar-test-issuer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    },
+    "sealer": {
+      "keys": [
+        {
+          "kty": "OKP",
+          "crv": "Ed25519",
+          "x": "oJql9HpnWYAv-VX43C0qFKXJnSO-l_hkEn_5ODRVpPA",
+          "kid": "oar-test-sealer",
+          "alg": "EdDSA",
+          "use": "sig"
+        }
+      ]
+    }
+  }
+}

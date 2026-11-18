@@ -22,7 +22,7 @@ export function line(text = ''): void {
   process.stdout.write(`${text}\n`);
 }
 
-const CHECK_ORDER = ['issuer_signature', 'seal', 'chain', 'checkpoint', 'timestamp', 'disclosures', 'approval'] as const;
+const CHECK_ORDER = ['issuer_signature', 'seal', 'chain', 'checkpoint', 'timestamp', 'disclosures', 'approval', 'authority'] as const;
 const CHECK_SHORT: Record<(typeof CHECK_ORDER)[number], string> = {
   issuer_signature: 'signature',
   seal: 'seal',
@@ -31,6 +31,7 @@ const CHECK_SHORT: Record<(typeof CHECK_ORDER)[number], string> = {
   timestamp: 'timestamp',
   disclosures: 'disclosures',
   approval: 'approval',
+  authority: 'authority',
 };
 
 /** The verification headline and, per record, which checks passed. */
@@ -61,9 +62,9 @@ export function levelText(level: VerificationReport['level']): string {
 /** One block per action: what was asked, who approved it, what changed, whether it is confirmed. */
 export function printActions(actions: readonly ActionSummary[]): void {
   for (const a of actions) {
-    const mark = a.outcome === 'confirmed' ? PASS : ['not_confirmed', 'failed', 'denied', 'rejected'].includes(a.outcome) ? FAIL : WAIT;
+    const mark = a.outcome === 'confirmed' ? PASS : ['not_confirmed', 'failed', 'denied', 'rejected', 'refused'].includes(a.outcome) ? FAIL : WAIT;
     line();
-    line(`${mark} ${c.bold(`${a.type} → ${a.target}`)}  ${OUTCOME_LABELS[a.outcome]}${a.verified === false ? c.red('  (records did not verify)') : ''}`);
+    line(`${mark} ${c.bold(`${a.type} → ${a.target}`)}  ${OUTCOME_LABELS[a.outcome]} ${c.dim(`[${a.outcomeClass}]`)}${a.verified === false ? c.red('  (records did not verify)') : ''}`);
     for (const s of a.steps) {
       const label = s.phase.padEnd(12);
       line(`    ${c.dim(label)} ${s.text}`);

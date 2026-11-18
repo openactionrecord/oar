@@ -28,7 +28,7 @@ version, not part of the specification.
 | Rule | What it asks for | What OAR records | Not covered yet |
 |---|---|---|---|
 | **New York DFS cybersecurity regulation, 23 NYCRR 500.6** (audit trail) | Systems that can "reconstruct material financial transactions" and audit trails to detect and respond to cybersecurity events; records kept "for not fewer than five years". | The decision, approval, execution and confirmation of each agent action, with commitments to the state before and after the change (section 4.2), so a transaction an agent made can be reconstructed and checked. | Retention: section 11.1. |
-| **NIST AI Agent Standards Initiative** (CAISI, launched February 2026) | Industry-led standards and open protocols for agents; NCCoE draft concept paper on agent identity and authorization (comments closed 2 April 2026). No logging or approval requirements yet. | Which agent acted (`agent_id`, a chain per agent), who approved, and on what rules. | Agent and model identity in more detail (*proposed*). |
+| **NIST AI Agent Standards Initiative** (CAISI, launched February 2026) | Industry-led standards and open protocols for agents; NCCoE draft concept paper on agent identity and authorization (comments closed 2 April 2026). No logging or approval requirements yet. | Which agent acted (`agent_id`, a chain per agent), who approved, and on what rules. The outside authorizations an action relied on, and whether they were still valid when it committed (`authorities` and `authority_check`, section 4.5). | Agent and model identity in more detail (*proposed*). |
 
 ## Canada
 
