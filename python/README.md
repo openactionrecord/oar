@@ -27,7 +27,17 @@ bundle = oar.bundle()                 # discloses nothing by default; disclose="
 verify_bundle(bundle).result          # "pass"
 ```
 
-Every path is recorded: allowed, held, approved, rejected, denied, failed, confirmed and not confirmed. Async agents use `await oar.run_async(...)` (any callback may be async). Prefer explicit steps? Use `oar.decide()`, `oar.approve()`, `oar.execute()` and `oar.confirm()`. Pass `on_record=` to persist each record as it is written, and `last_record=` to continue an agent's chain after a restart. `LocalSealer` adds a separate sealing service.
+Every path is recorded: allowed, held, approved, rejected, denied, failed, refused, confirmed and not confirmed. Async agents use `await oar.run_async(...)` (any callback may be async). Prefer explicit steps? Use `oar.decide()`, `oar.approve()`, `oar.execute()` and `oar.confirm()`. Pass `on_record=` to persist each record as it is written, and `last_record=` to continue an agent's chain after a restart. `LocalSealer` adds a separate sealing service.
+
+## Authority re-checked at commit
+
+```python
+action = oar.decide(type="payout", target="payments", params={"payee": "P-2077", "amount_cents": 980000}, result="allowed",
+                    authorities=[{"type": "aauth", "issuer": "https://auth.example", "artifact": token}])
+oar.execute(action, authority_check=[introspect(token)])   # "valid" runs; "revoked" is recorded as refused
+```
+
+The decision records each token, grant or approval result the action relied on, by digest; the execution records the same set checked again just before it ran. `oar.request_approval(action, display=...)` binds an approval (a passkey, or an outside service passed as `evidence=` to `approve()`) to this exact action and to what the approver was shown. `outcome_class()` reports each action as committed, refused or unresolved.
 
 ## Hermes Agent plugin
 
@@ -60,6 +70,6 @@ print(report.result, report.level)       # "pass", "sealed"
 print(outcomes(bundle))                  # ["confirmed", "denied", "not_confirmed"]
 ```
 
-The verifier checks every record's issuer signature, the separate sealing service's seal, each agent's hash chain, checkpoint coverage, outside RFC 3161 timestamps (against the bundled DigiCert roots) and any disclosed values. It reaches the same result as the TypeScript and browser verifiers on every shared test vector.
+The verifier checks every record's issuer signature, the separate sealing service's seal, each agent's hash chain, checkpoint coverage, outside RFC 3161 timestamps (against the bundled DigiCert roots), any disclosed values, approval bindings and authority re-checks. It reaches the same result as the TypeScript and browser verifiers on every shared test vector.
 
 Apache-2.0.

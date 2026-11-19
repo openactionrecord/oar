@@ -8,4 +8,6 @@ buttons that tamper with them, so you can watch verification fail.
 pnpm --filter @openactionrecord/web build   # writes packages/web/dist/index.html
 ```
 
+The build also writes `dist/rules.html`, "OAR and the rules", from `docs/REGULATORY-MAPPING.md`.
+
 Deployed to GitHub Pages by `.github/workflows/pages.yml`.
