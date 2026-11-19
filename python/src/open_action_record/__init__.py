@@ -10,4 +10,4 @@ __all__ = [
     "authority_set_digest", "binding_digest", "build_bundle", "check_approval", "check_authority", "check_authority_evidence", "outcome_class", "commitment_for", "generate_signing_key", "load_or_create_key", "outcomes", "parse_bundle",
     "public_keys", "verify_bundle",
 ]
-__version__ = "0.5.0"
+__version__ = "0.6.0"

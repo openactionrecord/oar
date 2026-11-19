@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (18 November 2026)
 
 - **`@openactionrecord/mcp` 0.1.0:** record every tool call on an MCP server. `recordTools(server, oar, options)`
   wraps tools as they are registered: rule decision, the caller's access token as the authority set, the re-check
