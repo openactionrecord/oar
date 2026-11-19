@@ -15,7 +15,7 @@
 | | | |
 |---|---|---|
 | **See it, nothing to install** | [Open the playground](https://openactionrecord.github.io/oar/) | Signed records from the database demo, verified in your browser. Press a tamper button and watch verification fail. |
-| **Run it (1 minute)** | `npx @openactionrecord/cli demo --database` | Needs Node.js 20+. No account, no setup. |
+| **Run it (1 minute)** | `npx @openactionrecord/cli demo --database` | Needs Node.js 20+. No account, no setup. For a payments agent whose access is revoked mid-action, use `--payouts`. |
 | **Record your own agent (5 minutes)** | [Quickstart](docs/QUICKSTART.md) | A runnable example with a real database, then how to point it at your system and your agent's tools. |
 | **Check it against the rules** | [OAR and the rules](https://openactionrecord.github.io/oar/rules.html) ([source](docs/REGULATORY-MAPPING.md)) | How OAR records line up with the EU AI Act, payment rules, GDPR, New York DFS and OSFI E-23, and what is not covered yet. |
 
